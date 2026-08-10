@@ -1,80 +1,263 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📍 Đo GPS</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-            background: #f5f5f5;
-            padding: 20px;
-        }
-
-        .header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 20px;
-        }
-
-        .header h1 {
-            font-size: 24px;
-        }
-
-        .back-btn {
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            cursor: pointer;
-            text-decoration: none;
-            font-size: 14px;
-        }
-
-        .back-btn:hover {
-            background: #5568d3;
-        }
-
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .placeholder {
-            text-align: center;
-            padding: 40px 20px;
-            color: #999;
-        }
-
-        .placeholder-icon {
-            font-size: 64px;
-            margin-bottom: 20px;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Đo khoảng cách GPS nhiều điểm</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;font-family:Arial,sans-serif;background:#0f1720;color:#fff}
+  .app{max-width:760px;margin:0 auto;padding:16px}
+  h1{font-size:23px;margin:4px 0 14px}
+  .card{background:#182331;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:15px;margin-bottom:12px}
+  .muted{color:#a9b5c4;font-size:13px}
+  .status{padding:10px 12px;border-radius:10px;background:#111923;margin-top:10px;font-size:14px}
+  .ok{color:#54e39a}.warn{color:#ffd166}.bad{color:#ff7676}
+  .live{font-size:52px;font-weight:900;line-height:1;margin:9px 0}
+  .total{font-size:34px;font-weight:900;margin:6px 0}
+  button{width:100%;border:0;border-radius:13px;padding:16px 12px;font-size:17px;font-weight:800}
+  .mark{background:#1687ff;color:#fff}
+  .csv{background:#13bd6b;color:#fff;margin-top:10px}
+  .reset{background:#344252;color:#fff;margin-top:10px}
+  .point{padding:11px 0;border-bottom:1px solid rgba(255,255,255,.08);font-size:14px;line-height:1.55}
+  .point:last-child{border-bottom:0}
+  .seg{font-weight:800;color:#71d7ff}
+</style>
 </head>
 <body>
-    <div class="header">
-        <h1>📍 Đo GPS</h1>
-        <a href="../" class="back-btn">← Quay lại</a>
-    </div>
+<div class="app">
+  <h1>📍 Đo khoảng cách GPS nhiều điểm</h1>
 
-    <div class="container">
-        <div class="placeholder">
-            <div class="placeholder-icon">📍</div>
-            <p>GPS App - Đang phát triển</p>
-        </div>
-    </div>
+  <div class="card">
+    <b>GPS hiện tại</b><br>
+    Vĩ độ: <span id="lat">--</span><br>
+    Kinh độ: <span id="lon">--</span><br>
+    Độ chính xác: <span id="acc">--</span> m
+    <div class="status" id="status">Đang lấy vị trí...</div>
+  </div>
+
+  <div class="card">
+    <div class="muted">Khoảng cách trực tiếp từ điểm gần nhất đến vị trí hiện tại</div>
+    <div class="live"><span id="liveDistance">--</span> m</div>
+    <div id="liveLabel" class="muted">Bấm “Ghi điểm A” để bắt đầu.</div>
+  </div>
+
+  <button class="mark" id="markBtn">📌 Ghi điểm A</button>
+
+  <div class="card" style="margin-top:12px">
+    <div class="muted">Tổng chiều dài các đoạn đã chốt</div>
+    <div class="total"><span id="totalDistance">0.0</span> m</div>
+  </div>
+
+  <div class="card">
+    <b>Danh sách điểm</b>
+    <div id="points"><div class="muted" style="margin-top:10px">Chưa có điểm nào.</div></div>
+  </div>
+
+  <button class="csv" id="csvBtn">📊 Xuất Excel (CSV)</button>
+  <button class="reset" id="resetBtn">↻ Đo lại từ đầu</button>
+
+  <p class="muted" style="text-align:center;margin:22px 0 8px;font-weight:700;">Made by Thành Nam</p>
+</div>
+
+<script>
+let current=null;
+let points=[];
+let total=0;
+
+const $=id=>document.getElementById(id);
+
+function fmt(n,d=7){return Number(n).toFixed(d)}
+function pointName(i){
+  const letters="ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  if(i<26) return letters[i];
+  return "P"+(i+1);
+}
+
+function setStatus(text,cls=""){
+  const el=$("status");
+  el.textContent=text;
+  el.className="status "+cls;
+}
+
+function distanceMeters(a,b){
+  const R=6371000;
+  const rad=x=>x*Math.PI/180;
+  const p1=rad(a.lat), p2=rad(b.lat);
+  const dLat=rad(b.lat-a.lat), dLon=rad(b.lon-a.lon);
+  const h=Math.sin(dLat/2)**2+Math.cos(p1)*Math.cos(p2)*Math.sin(dLon/2)**2;
+  return 2*R*Math.asin(Math.sqrt(h));
+}
+
+function updateCurrent(pos){
+  current={
+    lat:pos.coords.latitude,
+    lon:pos.coords.longitude,
+    acc:pos.coords.accuracy,
+    time:new Date()
+  };
+  $("lat").textContent=fmt(current.lat);
+  $("lon").textContent=fmt(current.lon);
+  $("acc").textContent=Math.round(current.acc);
+
+  if(current.acc<=5) setStatus("GPS rất tốt - có thể ghi điểm.","ok");
+  else if(current.acc<=15) setStatus("GPS khá tốt - có thể ghi điểm.","warn");
+  else setStatus("GPS chưa ổn định, nên đứng yên và chờ thêm.","bad");
+
+  updateLive();
+}
+
+function gpsError(err){
+  const msg={
+    1:"Chưa được cấp quyền vị trí.",
+    2:"Điện thoại chưa xác định được vị trí.",
+    3:"GPS phản hồi quá lâu."
+  };
+  setStatus(msg[err.code]||"Không lấy được GPS.","bad");
+}
+
+function updateLive(){
+  if(!current || points.length===0){
+    $("liveDistance").textContent="--";
+    $("liveLabel").textContent="Bấm “Ghi điểm A” để bắt đầu.";
+    return;
+  }
+  const last=points[points.length-1];
+  const d=distanceMeters(last,current);
+  $("liveDistance").textContent=d<100 ? d.toFixed(1) : Math.round(d);
+  $("liveLabel").textContent="Đang đo "+pointName(points.length-1)+" → "+pointName(points.length);
+}
+
+function renderPoints(){
+  if(points.length===0){
+    $("points").innerHTML='<div class="muted" style="margin-top:10px">Chưa có điểm nào.</div>';
+    return;
+  }
+  let html="";
+  points.forEach((p,i)=>{
+    let seg="";
+    if(i>0){
+      seg='<div class="seg">Đoạn '+pointName(i-1)+'–'+pointName(i)+': '+p.segment.toFixed(1)+' m</div>';
+    }
+    html+=`
+      <div class="point">
+        <b>Điểm ${pointName(i)}</b><br>
+        ${seg}
+        Vĩ độ: ${fmt(p.lat)}<br>
+        Kinh độ: ${fmt(p.lon)}<br>
+        Sai số lúc ghi: ±${Math.round(p.acc)} m
+      </div>`;
+  });
+  $("points").innerHTML=html;
+}
+
+function markPoint(){
+  if(!current){
+    alert("Chưa lấy được GPS.");
+    return;
+  }
+
+  const newPoint={...current, time:new Date(), segment:0};
+
+  if(points.length>0){
+    const last=points[points.length-1];
+    newPoint.segment=distanceMeters(last,newPoint);
+    total+=newPoint.segment;
+  }
+
+  points.push(newPoint);
+
+  $("totalDistance").textContent=total.toFixed(1);
+  $("markBtn").textContent="📌 Ghi điểm "+pointName(points.length);
+  renderPoints();
+  updateLive();
+}
+
+function resetAll(){
+  points=[];
+  total=0;
+  $("totalDistance").textContent="0.0";
+  $("markBtn").textContent="📌 Ghi điểm A";
+  renderPoints();
+  updateLive();
+}
+
+function exportCSV(){
+  if(points.length===0){
+    alert("Chưa có điểm nào để xuất.");
+    return;
+  }
+
+  const rows = [[
+    "STT",
+    "Điểm bấm",
+    "Vĩ độ",
+    "Kinh độ",
+    "Sai số",
+    "Số mét giữa các điểm",
+    "Tổng số mét đã bấm",
+    "Thời gian"
+  ]];
+
+  let cumulative = 0;
+
+  points.forEach((p,i)=>{
+    const segment = Number(p.segment || 0);
+    if(i > 0) cumulative += segment;
+
+    rows.push([
+      i + 1,
+      i + 1,
+      Number(p.lat).toFixed(7),
+      Number(p.lon).toFixed(7),
+      Math.round(Number(p.acc || 0)),
+      i === 0 ? "" : segment.toFixed(1),
+      cumulative.toFixed(1),
+      p.time instanceof Date
+        ? p.time.toLocaleString("vi-VN", {
+            day:"2-digit",
+            month:"2-digit",
+            year:"numeric",
+            hour:"2-digit",
+            minute:"2-digit"
+          })
+        : ""
+    ]);
+  });
+
+  const esc = v => '"' + String(v ?? "").replace(/"/g,'""') + '"';
+  const csv = "\uFEFF" + rows.map(r => r.map(esc).join(",")).join("\r\n");
+
+  const blob = new Blob([csv], {type:"text/csv;charset=utf-8;"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+
+  const now = new Date();
+  const pad = n => String(n).padStart(2,"0");
+
+  a.href = url;
+  a.download = `GPS_${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}.csv`;
+
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+$("csvBtn").addEventListener("click",exportCSV);
+
+$("markBtn").addEventListener("click",markPoint);
+$("resetBtn").addEventListener("click",resetAll);
+
+if("geolocation" in navigator){
+  navigator.geolocation.watchPosition(
+    updateCurrent,
+    gpsError,
+    {enableHighAccuracy:true,maximumAge:0,timeout:15000}
+  );
+}else{
+  setStatus("Trình duyệt không hỗ trợ GPS.","bad");
+}
+</script>
 </body>
 </html>
