@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tính & Tra Cứu Dây Chì FCO Máy Biến Áp 22kV / 35kV</title>
+  <!-- Google Fonts & Tailwind CSS -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Be Vietnam Pro"', 'sans-serif'],
+          },
+          colors: {
+            evn: {
+              blue: '#004b91',
+              dark: '#003366',
+              light: '#0066cc',
+              orange: '#f37021',
+              orangeHover: '#d95d12',
+              bg: '#f4f7fb'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #f0f4f9;
+      font-family: 'Be Vietnam Pro', sans-serif;
+    }
+    .card-shadow {
+      box-shadow: 0 10px 25px -5px rgba(0, 75, 145, 0.08), 0 8px 10px -6px rgba(0, 75, 145, 0.05);
+    }
+    @media print {
+      .no-print { display: none !important; }
+      body { background-color: #ffffff; }
+      .print-shadow-none { box-shadow: none !important; border: 1px solid #ddd !important; }
+    }
+  </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen flex flex-col justify-between">
+
+  <!-- HEADER -->
+  <header class="bg-gradient-to-r from-evn-dark via-evn-blue to-evn-light text-white shadow-lg no-print">
+    <div class="max-w-5xl mx-auto px-4 py-4 sm:px-6 flex flex-col sm:flex-row justify-between items-center gap-3">
+      <div class="flex items-center gap-3">
+        <div class="bg-white/10 p-2.5 rounded-xl backdrop-blur-sm border border-white/20">
+          <svg class="w-7 h-7 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-lg sm:text-xl font-bold tracking-tight text-white flex items-center gap-2">
+            TÍNH CHỌN DÂY CHÌ FCO MBA
+            <span class="bg-amber-400 text-slate-900 text-xs px-2 py-0.5 rounded-full font-bold">22kV - 35kV</span>
+          </h1>
+          <p class="text-xs text-blue-100 font-medium">Công cụ kỹ thuật điện lực • Chuẩn EVN & SCTX / SCL</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 text-xs">
+        <span class="bg-white/15 px-3 py-1.5 rounded-lg border border-white/20 flex items-center gap-1.5 font-medium">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          Điện lực Nam Trực
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="max-w-5xl mx-auto px-4 py-6 sm:px-6 flex-1 w-full space-y-6">
+
+    <!-- INPUT & RESULT SECTION -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      
+      <!-- CỘT TRÁI: FORM NHẬP THÔNG SỐ -->
+      <div class="lg:col-span-5 bg-white rounded-2xl p-5 sm:p-6 card-shadow border border-slate-200/80">
+        <div class="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
+          <h2 class="text-base font-bold text-evn-blue flex items-center gap-2">
+            <svg class="w-5 h-5 text-evn-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
+            </svg>
+            Thông số tính toán
+          </h2>
+          <button type="button" onclick="resetForm()" class="text-xs font-semibold text-slate-400 hover:text-rose-600 transition flex items-center gap-1 no-print">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            Đặt lại
+          </button>
+        </div>
+
+        <form id="calcForm" onsubmit="event.preventDefault(); tinhDayChi();" class="space-y-4">
+          <!-- Chọn nhanh công suất MBA -->
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+              1. Chọn công suất MBA (kVA)
+            </label>
+            <select id="quickSelectKva" onchange="onQuickSelectChange()" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-sm font-semibold rounded-xl focus:ring-2 focus:ring-evn-blue focus:border-evn-blue block p-2.5 transition">
+              <option value="">-- Chọn công suất thông dụng --</option>
+              <optgroup label="Công suất nhỏ / Trạm chuyên dùng">
+                <option value="31.5">31.5 kVA</option>
+                <option value="50">50 kVA</option>
+                <option value="75">75 kVA</option>
+                <option value="100">100 kVA</option>
+                <option value="160">160 kVA</option>
+                <option value="180" selected>180 kVA</option>
+              </optgroup>
+              <optgroup label="Công suất phân phối tiêu chuẩn">
+                <option value="250">250 kVA</option>
+                <option value="315">315 kVA</option>
+                <option value="320">320 kVA</option>
+                <option value="400">400 kVA</option>
+                <option value="560">560 kVA</option>
+                <option value="630">630 kVA</option>
+                <option value="700">700 kVA</option>
+                <option value="750">750 kVA</option>
+              </optgroup>
+              <optgroup label="Công suất lớn / Công nghiệp">
+                <option value="1000">1000 kVA</option>
+                <option value="1250">1250 kVA</option>
+                <option value="1600">1600 kVA</option>
+                <option value="2000">2000 kVA</option>
+                <option value="2500">2500 kVA</option>
+              </optgroup>
+            </select>
+          </div>
+
+          <!-- Hoặc nhập công suất tùy ý -->
+          <div>
+            <div class="flex justify-between items-center mb-1.5">
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-600">
+                Hoặc nhập kVA tùy chỉnh
+              </label>
+              <span class="text-[11px] text-slate-400">Đơn vị: kVA</span>
+            </div>
+            <div class="relative">
+              <input type="number" id="inputKva" step="any" min="1" max="10000" value="180" oninput="tinhDayChi()" class="w-full bg-white border border-slate-300 text-slate-800 font-bold text-base rounded-xl focus:ring-2 focus:ring-evn-blue focus:border-evn-blue block p-2.5 pl-3 pr-16 transition" placeholder="VD: 180">
+              <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-xs font-bold text-slate-400">
+                kVA
+              </div>
+            </div>
+          </div>
+
+          <!-- Cấp điện áp định mức -->
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+              2. Cấp điện áp định mức lưới (kV)
+            </label>
+            <div class="grid grid-cols-3 gap-2">
+              <label class="cursor-pointer">
+                <input type="radio" name="voltageRadio" value="22" checked onchange="updateVoltage(22)" class="peer sr-only">
+                <div class="text-center py-2 px-3 rounded-xl border border-slate-200 bg-slate-50 peer-checked:bg-evn-blue peer-checked:text-white peer-checked:border-evn-blue peer-checked:shadow-sm font-bold text-xs sm:text-sm transition">
+                  22 kV
+                </div>
+              </label>
+              <label class="cursor-pointer">
+                <input type="radio" name="voltageRadio" value="35" onchange="updateVoltage(35)" class="peer sr-only">
+                <div class="text-center py-2 px-3 rounded-xl border border-slate-200 bg-slate-50 peer-checked:bg-evn-blue peer-checked:text-white peer-checked:border-evn-blue peer-checked:shadow-sm font-bold text-xs sm:text-sm transition">
+                  35 kV
+                </div>
+              </label>
+              <label class="cursor-pointer">
+                <input type="radio" name="voltageRadio" value="10" onchange="updateVoltage(10)" class="peer sr-only">
+                <div class="text-center py-2 px-3 rounded-xl border border-slate-200 bg-slate-50 peer-checked:bg-evn-blue peer-checked:text-white peer-checked:border-evn-blue peer-checked:shadow-sm font-bold text-xs sm:text-sm transition">
+                  10 kV
+                </div>
+              </label>
+            </div>
+            <input type="hidden" id="voltageInput" value="22">
+          </div>
+
+          <!-- Hệ số chọn dây chì (k_cc) -->
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+              3. Hệ số chọn dây chì ($k_{cc} \times I_{đm}$)
+            </label>
+            <select id="selectK" onchange="tinhDayChi()" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs font-semibold rounded-xl focus:ring-2 focus:ring-evn-blue focus:border-evn-blue block p-2.5 transition">
+              <option value="1.25" selected>1.25 × Iđm (Tiêu chuẩn EVN / Khuyến nghị)</option>
+              <option value="1.30">1.30 × Iđm (Tiêu chuẩn vận hành thông dụng)</option>
+              <option value="1.50">1.50 × Iđm (Cho phép quá tải ngắn hạn / Khởi động)</option>
+              <option value="2.00">2.00 × Iđm (Bảo vệ ngắn mạch tối đa)</option>
+            </select>
+          </div>
+
+          <!-- Tùy chọn nâng cao: Công thức tính dòng điện -->
+          <div class="pt-2 border-t border-slate-100">
+            <div class="flex items-center justify-between cursor-pointer" onclick="toggleAdvanced()">
+              <span class="text-xs font-semibold text-slate-500 hover:text-evn-blue flex items-center gap-1">
+                <svg id="advIcon" class="w-3.5 h-3.5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                Tùy chọn công thức cosφ
+              </span>
+              <span id="formulaBadge" class="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-mono font-medium">S / (√3·U·cosφ)</span>
+            </div>
+            
+            <div id="advOptions" class="mt-3 space-y-2.5 hidden bg-slate-50 p-3 rounded-xl border border-slate-200/70 text-xs">
+              <div>
+                <label class="font-medium text-slate-700 block mb-1">Phương pháp tính dòng sơ cấp $I_{đm}$:</label>
+                <div class="space-y-1.5">
+                  <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="formulaType" value="with_cos" checked onchange="tinhDayChi()" class="text-evn-blue focus:ring-evn-blue">
+                    <span class="text-slate-700">Có cosφ: $I = \frac{S}{\sqrt{3} \times U \times \cos\varphi}$ (như thảo luận)</span>
+                  </label>
+                  <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="formulaType" value="apparent" onchange="tinhDayChi()" class="text-evn-blue focus:ring-evn-blue">
+                    <span class="text-slate-700">Dòng biểu kiến: $I = \frac{S}{\sqrt{3} \times U}$ (chuẩn định mức FCO)</span>
+                  </label>
+                </div>
+              </div>
+              <div id="cosPhiContainer" class="flex items-center justify-between pt-2 border-t border-slate-200">
+                <span class="text-slate-600 font-medium">Hệ số công suất ($\cos\varphi$):</span>
+                <input type="number" id="inputCosPhi" step="0.01" min="0.5" max="1.0" value="0.85" oninput="tinhDayChi()" class="w-20 bg-white border border-slate-300 rounded-lg px-2 py-1 text-center font-bold text-slate-800">
+              </div>
+            </div>
+          </div>
+
+          <!-- Nút bấm Tính toán -->
+          <div class="pt-2 no-print">
+            <button type="button" onclick="tinhDayChi()" class="w-full bg-gradient-to-r from-evn-orange to-evn-orangeHover hover:from-evn-orangeHover hover:to-evn-orange text-white font-bold py-3 px-4 rounded-xl shadow-md hover:shadow-lg transition transform active:scale-[0.99] flex items-center justify-center gap-2 text-sm">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+              TÍNH & CHỌN DÂY CHÌ
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- CỘT PHẢI: KẾT QUẢ TÍNH & KHUYẾN NGHỊ -->
+      <div class="lg:col-span-7 flex flex-col space-y-6">
+        
+        <!-- CARD KẾT QUẢ CHÍNH -->
+        <div class="bg-gradient-to-br from-white via-slate-50 to-blue-50/40 rounded-2xl p-5 sm:p-6 card-shadow border border-slate-200/90 relative overflow-hidden">
+          <div class="absolute -right-6 -bottom-6 w-36 h-36 bg-blue-100/50 rounded-full blur-2xl pointer-events-none"></div>
+
+          <div class="flex justify-between items-start mb-4 relative z-10">
+            <div>
+              <span class="text-[11px] font-extrabold uppercase tracking-wider text-evn-blue bg-blue-100/80 px-2.5 py-1 rounded-md">
+                Kết Quả Chọn Dây Chì FCO
+              </span>
+              <h3 id="resTitle" class="text-xl sm:text-2xl font-black text-slate-800 mt-1.5">
+                MBA 180 kVA - 22kV
+              </h3>
+            </div>
+            <button onclick="copyResultText()" class="no-print bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 px-3 py-1.5 rounded-lg text-xs font-semibold shadow-sm transition flex items-center gap-1.5 active:scale-95" title="Copy kết quả">
+              <svg id="copyIcon" class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+              <span id="copyBtnText">Copy kết quả</span>
+            </button>
+          </div>
+
+          <!-- THÔNG SỐ TÍNH ĐƯỢC -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5 relative z-10">
+            <div class="bg-white p-3.5 rounded-xl border border-slate-200/90 shadow-sm">
+              <p class="text-[11px] font-bold text-slate-500 uppercase">1. Dòng định mức ($I_{đm}$)</p>
+              <p id="resIdm" class="text-xl font-black text-slate-800 mt-1">4.74 <span class="text-xs font-semibold text-slate-500">A</span></p>
+              <p id="resIdmFormula" class="text-[10px] text-slate-400 mt-0.5 truncate">180 / (√3 × 22 × 0.85)</p>
+            </div>
+
+            <div class="bg-white p-3.5 rounded-xl border border-slate-200/90 shadow-sm">
+              <p class="text-[11px] font-bold text-slate-500 uppercase">2. Dòng tính chì ($k \times I_{đm}$)</p>
+              <p id="resItinh" class="text-xl font-black text-evn-blue mt-1">5.93 <span class="text-xs font-semibold text-slate-500">A</span></p>
+              <p id="resKInfo" class="text-[10px] text-slate-400 mt-0.5">1.25 × 4.74 A</p>
+            </div>
+
+            <div class="bg-gradient-to-br from-amber-500 to-amber-600 text-white p-3.5 rounded-xl shadow-md border border-amber-400/50">
+              <p class="text-[11px] font-bold text-amber-100 uppercase">3. Dây chì chọn (FCO)</p>
+              <p id="resFuse" class="text-2xl font-black text-white mt-1">10 <span class="text-xs font-bold text-amber-100">A</span></p>
+              <p id="resFuseNote" class="text-[10px] text-amber-100 mt-0.5">Chọn size chuẩn $\ge 5.93\text{A}$</p>
+            </div>
+          </div>
+
+          <!-- CHI TIẾT THUYẾT MINH KỸ THUẬT -->
+          <div class="bg-white rounded-xl p-4 border border-slate-200 text-xs space-y-2 relative z-10">
+            <h4 class="font-bold text-slate-700 flex items-center gap-1.5 text-xs uppercase tracking-wide">
+              <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              Chi tiết các bước tính toán (Traceability)
+            </h4>
+            <div id="stepDetails" class="space-y-1.5 text-slate-600 font-mono bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+              <!-- Nội dung sẽ được JS render -->
+            </div>
+            <p class="text-[11px] text-slate-500 italic mt-2">
+              💡 <b>Ghi chú vận hành:</b> Cỡ dây chì được chọn theo dãy tiêu chuẩn IEC / EVN ($1, 2, 3, 5, 6, 8, 10, 15, 20, 25, 30, 40, 50, 65, 80, 100, 140, 200\text{A}$).
+            </p>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
+    <!-- BẢNG TRA CỨU NHANH TẤT CẢ CÔNG SUẤT MBA 22KV -->
+    <div class="bg-white rounded-2xl p-5 sm:p-6 card-shadow border border-slate-200/80">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-4 mb-4 border-b border-slate-100">
+        <div>
+          <h2 class="text-base font-bold text-evn-blue flex items-center gap-2">
+            <svg class="w-5 h-5 text-evn-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+            </svg>
+            Bảng tra cứu nhanh dây chì MBA theo cấp điện áp
+          </h2>
+          <p class="text-xs text-slate-500 mt-0.5">Bấm trực tiếp vào hàng để nạp số liệu lên máy tính</p>
+        </div>
+
+        <div class="flex items-center gap-2 w-full sm:w-auto no-print">
+          <div class="relative flex-1 sm:w-48">
+            <input type="text" id="tableFilter" oninput="filterTable()" placeholder="Lọc công suất (kVA)..." class="w-full bg-slate-50 border border-slate-200 text-xs rounded-lg px-2.5 py-1.5 focus:ring-1 focus:ring-evn-blue">
+          </div>
+          <button onclick="window.print()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-semibold border border-slate-200 flex items-center gap-1 transition">
+            <svg class="w-3.5 h-3.5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+            In / Xuất PDF
+          </button>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-xs text-left border-collapse" id="quickLookupTable">
+          <thead>
+            <tr class="bg-slate-100/90 text-slate-700 uppercase font-bold text-[11px] border-b border-slate-200">
+              <th class="p-3 rounded-l-lg">Công suất MBA</th>
+              <th class="p-3">Điện áp U</th>
+              <th class="p-3">Dòng định mức $I_{đm}$</th>
+              <th class="p-3">Dòng tính ($1.25 \times I_{đm}$)</th>
+              <th class="p-3 text-center bg-amber-100/70 text-slate-900 font-extrabold rounded-r-lg">Dây chì chọn (A)</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody" class="divide-y divide-slate-100 font-medium text-slate-700">
+            <!-- Render bởi Javascript -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="bg-white border-t border-slate-200 text-slate-500 text-xs py-4 px-4 text-center no-print">
+    <div class="max-w-5xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
+      <p>© 2026 <b>Điện lực Nam Trực</b> • Bộ công cụ KHKT & SCTX</p>
+      <p class="text-[11px] text-slate-400">
+        Host trên GitHub Pages: <a href="https://github.com/thanhnam1986/my-apps" target="_blank" class="text-evn-blue hover:underline font-semibold">thanhnam1986/my-apps</a>
+      </p>
+    </div>
+  </footer>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    // Dãy cỡ dây chì tiêu chuẩn IEC / EVN
+    const STANDARD_FUSE_SIZES = [1, 2, 3, 5, 6, 8, 10, 12, 15, 20, 25, 30, 40, 50, 65, 80, 100, 140, 200];
+    
+    // Danh sách MBA thông dụng
+    const DEFAULT_MBA_LIST = [31.5, 50, 75, 100, 160, 180, 250, 315, 320, 400, 560, 630, 700, 750, 1000, 1250, 1600, 2000, 2500];
+
+    // Trạng thái tính toán hiện tại
+    let currentResult = {};
+
+    function updateVoltage(val) {
+      document.getElementById('voltageInput').value = val;
+      tinhDayChi();
+      renderLookupTable();
+    }
+
+    function onQuickSelectChange() {
+      const val = document.getElementById('quickSelectKva').value;
+      if (val) {
+        document.getElementById('inputKva').value = val;
+      }
+      tinhDayChi();
+    }
+
+    function toggleAdvanced() {
+      const el = document.getElementById('advOptions');
+      const icon = document.getElementById('advIcon');
+      if (el.classList.contains('hidden')) {
+        el.classList.remove('hidden');
+        icon.classList.add('rotate-180');
+      } else {
+        el.classList.add('hidden');
+        icon.classList.remove('rotate-180');
+      }
+    }
+
+    function selectFromTable(kva, u) {
+      document.getElementById('inputKva').value = kva;
+      document.getElementById('quickSelectKva').value = kva;
+      
+      // Update radio voltage
+      const radios = document.getElementsByName('voltageRadio');
+      for (let r of radios) {
+        if (parseFloat(r.value) === u) r.checked = true;
+      }
+      document.getElementById('voltageInput').value = u;
+      
+      tinhDayChi();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function tinhDayChi() {
+      const kva = parseFloat(document.getElementById('inputKva').value);
+      const u = parseFloat(document.getElementById('voltageInput').value) || 22;
+      const k = parseFloat(document.getElementById('selectK').value) || 1.25;
+      const formulaType = document.querySelector('input[name="formulaType"]:checked').value;
+      const cosPhi = parseFloat(document.getElementById('inputCosPhi').value) || 0.85;
+
+      const cosContainer = document.getElementById('cosPhiContainer');
+      const formulaBadge = document.getElementById('formulaBadge');
+      
+      if (formulaType === 'with_cos') {
+        cosContainer.style.display = 'flex';
+        formulaBadge.textContent = 'S / (√3·U·cosφ)';
+      } else {
+        cosContainer.style.display = 'none';
+        formulaBadge.textContent = 'S / (√3·U)';
+      }
+
+      if (isNaN(kva) || kva <= 0) {
+        return;
+      }
+
+      // Tính dòng định mức sơ cấp Iđm
+      let idm = 0;
+      let formulaStr = "";
+      if (formulaType === 'with_cos') {
+        idm = kva / (Math.sqrt(3) * u * cosPhi);
+        formulaStr = `${kva} / (√3 × ${u} × ${cosPhi})`;
+      } else {
+        idm = kva / (Math.sqrt(3) * u);
+        formulaStr = `${kva} / (√3 × ${u})`;
+      }
+
+      // Dòng tính chọn dây chì
+      const idmTimesK = k * idm;
+
+      // Chọn dây chì tiêu chuẩn >= idmTimesK
+      let chosenFuse = STANDARD_FUSE_SIZES.find(s => s >= idmTimesK);
+      if (!chosenFuse) {
+        chosenFuse = STANDARD_FUSE_SIZES[STANDARD_FUSE_SIZES.length - 1]; // Max size
+      }
+
+      currentResult = {
+        kva,
+        u,
+        k,
+        cosPhi: formulaType === 'with_cos' ? cosPhi : null,
+        formulaType,
+        idm: idm.toFixed(2),
+        idmTimesK: idmTimesK.toFixed(2),
+        chosenFuse
+      };
+
+      // Cập nhật giao diện
+      document.getElementById('resTitle').textContent = `MBA ${kva} kVA - ${u} kV`;
+      document.getElementById('resIdm').innerHTML = `${idm.toFixed(2)} <span class="text-xs font-semibold text-slate-500">A</span>`;
+      document.getElementById('resIdmFormula').textContent = formulaStr;
+      
+      document.getElementById('resItinh').innerHTML = `${idmTimesK.toFixed(2)} <span class="text-xs font-semibold text-slate-500">A</span>`;
+      document.getElementById('resKInfo').textContent = `${k} × ${idm.toFixed(2)} A`;
+      
+      document.getElementById('resFuse').innerHTML = `${chosenFuse} <span class="text-xs font-bold text-amber-100">A</span>`;
+      document.getElementById('resFuseNote').textContent = `Chọn cỡ chuẩn ≥ ${idmTimesK.toFixed(2)} A`;
+
+      // Cập nhật thuyết minh chi tiết
+      document.getElementById('stepDetails').innerHTML = `
+        <div>• <b>Bước 1:</b> Dòng điện sơ cấp: $I_{đm} = ${formulaStr} = <b>${idm.toFixed(2)} A</b>$</div>
+        <div>• <b>Bước 2:</b> Dòng tính toán chọn chì: $I_{tính} = ${k} \\times ${idm.toFixed(2)} = <b>${idmTimesK.toFixed(2)} A</b>$</div>
+        <div>• <b>Bước 3:</b> Cỡ chì FCO chuẩn (IEC/EVN) $\\ge ${idmTimesK.toFixed(2)}\\text{A}$: chọn <b>DÂY CHÌ ${chosenFuse} A</b></div>
+      `;
+
+      // Đồng bộ lại dropdown chọn nhanh nếu trùng
+      const selectEl = document.getElementById('quickSelectKva');
+      if ([...selectEl.options].some(o => parseFloat(o.value) === kva)) {
+        selectEl.value = kva;
+      } else {
+        selectEl.value = "";
+      }
+    }
+
+    function renderLookupTable() {
+      const u = parseFloat(document.getElementById('voltageInput').value) || 22;
+      const k = parseFloat(document.getElementById('selectK').value) || 1.25;
+      const formulaType = document.querySelector('input[name="formulaType"]:checked').value;
+      const cosPhi = parseFloat(document.getElementById('inputCosPhi').value) || 0.85;
+
+      const tbody = document.getElementById('tableBody');
+      tbody.innerHTML = '';
+
+      DEFAULT_MBA_LIST.forEach(kva => {
+        let idm = 0;
+        if (formulaType === 'with_cos') {
+          idm = kva / (Math.sqrt(3) * u * cosPhi);
+        } else {
+          idm = kva / (Math.sqrt(3) * u);
+        }
+
+        const idmTimesK = k * idm;
+        let chosenFuse = STANDARD_FUSE_SIZES.find(s => s >= idmTimesK) || STANDARD_FUSE_SIZES[STANDARD_FUSE_SIZES.length - 1];
+
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-blue-50/70 transition cursor-pointer border-b border-slate-100";
+        tr.onclick = () => selectFromTable(kva, u);
+        tr.innerHTML = `
+          <td class="p-3 font-bold text-slate-800 flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-evn-blue"></span>
+            ${kva} kVA
+          </td>
+          <td class="p-3 text-slate-600">${u} kV</td>
+          <td class="p-3 font-mono text-slate-700">${idm.toFixed(2)} A</td>
+          <td class="p-3 font-mono text-evn-blue font-semibold">${idmTimesK.toFixed(2)} A</td>
+          <td class="p-3 text-center bg-amber-50/80 font-black text-amber-700 text-sm">${chosenFuse} A</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function filterTable() {
+      const query = document.getElementById('tableFilter').value.toLowerCase().trim();
+      const rows = document.querySelectorAll('#tableBody tr');
+      rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(query) ? '' : 'none';
+      });
+    }
+
+    function resetForm() {
+      document.getElementById('inputKva').value = 180;
+      document.getElementById('quickSelectKva').value = 180;
+      document.querySelector('input[name="voltageRadio"][value="22"]').checked = true;
+      document.getElementById('voltageInput').value = 22;
+      document.getElementById('selectK').value = "1.25";
+      document.querySelector('input[name="formulaType"][value="with_cos"]').checked = true;
+      document.getElementById('inputCosPhi').value = 0.85;
+      tinhDayChi();
+      renderLookupTable();
+    }
+
+    function copyResultText() {
+      if (!currentResult.kva) return;
+      const text = `KẾT QUẢ TÍNH CHỌN DÂY CHÌ FCO MBA:\n- MBA: ${currentResult.kva} kVA - ${currentResult.u} kV\n- Dòng định mức Iđm: ${currentResult.idm} A\n- Dòng tính toán (${currentResult.k} x Iđm): ${currentResult.idmTimesK} A\n- DÂY CHÌ FCO CHỌN: ${currentResult.chosenFuse} A\n(Điện lực Nam Trực - Tool tra cứu KHKT)`;
+      
+      navigator.clipboard.writeText(text).then(() => {
+        const btnText = document.getElementById('copyBtnText');
+        btnText.textContent = "Đã Copy!";
+        btnText.classList.add("text-emerald-600");
+        setTimeout(() => {
+          btnText.textContent = "Copy kết quả";
+          btnText.classList.remove("text-emerald-600");
+        }, 2000);
+      });
+    }
+
+    // Khởi tạo ban đầu
+    window.addEventListener('DOMContentLoaded', () => {
+      tinhDayChi();
+      renderLookupTable();
+    });
+  </script>
+</body>
+</html>
