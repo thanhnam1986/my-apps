@@ -1,0 +1,33 @@
+import math
+
+def tinh_day_chi_mba(kva, u=22, cos_phi=0.85):
+    """
+    Tính dây chì MBA theo công thức 1.25 × Iđm
+    
+    Args:
+        kva: Công suất MBA (kVA)
+        u: Điện áp định mức (kV), mặc định 22kV
+        cos_phi: Hệ số công suất, mặc định 0.85
+    
+    Returns:
+        dict: Iđm, 1.25×Iđm, và dây chì chọn
+    """
+    idm = kva / (math.sqrt(3) * u * cos_phi)
+    day_chi_tinh = 1.25 * idm
+    
+    # Chọn size có sẵn
+    sizes = [10, 15, 20, 25]
+    day_chi_chon = min([s for s in sizes if s >= day_chi_tinh])
+    
+    return {
+        'kva': kva,
+        'idm': round(idm, 2),
+        'day_chi_tinh': round(day_chi_tinh, 2),
+        'day_chi_chon': day_chi_chon
+    }
+
+# Test
+mba_list = [180, 250, 320, 400, 560, 630, 700]
+for kva in mba_list:
+    result = tinh_day_chi_mba(kva)
+    print(f"MBA {result['kva']}kVA: Dây chì {result['day_chi_chon']}A")
