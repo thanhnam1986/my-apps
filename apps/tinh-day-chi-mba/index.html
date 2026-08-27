@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0f766e">
+  <title>Tính dòng và dây chì MBA</title>
+  <style>
+    :root { color-scheme:light; --primary:#0f766e; --dark:#115e59; --ink:#17202a; --muted:#64748b; --line:#dbe4ea; --danger:#b42318; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif; color:var(--ink); background:linear-gradient(155deg,#dff5f1 0,#f8fafc 50%,#e8eef5 100%); }
+    main { width:min(100%,560px); margin:auto; padding:calc(20px + env(safe-area-inset-top)) 16px calc(28px + env(safe-area-inset-bottom)); }
+    .back { display:inline-flex; align-items:center; min-height:44px; color:var(--dark); font-weight:750; text-decoration:none; }
+    header { margin:8px 0 20px; }
+    h1 { margin:0 0 7px; font-size:clamp(1.6rem,7vw,2.1rem); line-height:1.18; }
+    header p { margin:0; color:var(--muted); line-height:1.5; }
+    .card { padding:18px; border:1px solid rgba(148,163,184,.28); border-radius:20px; background:#fff; box-shadow:0 14px 35px rgba(15,23,42,.09); }
+    label { display:block; margin-bottom:8px; font-weight:800; }
+    .input-wrap { position:relative; }
+    input { width:100%; min-height:58px; padding:12px 68px 12px 15px; border:1.5px solid #b8c6d1; border-radius:13px; color:var(--ink); background:#fff; font:inherit; font-size:1.15rem; outline:none; }
+    input:focus { border-color:var(--primary); box-shadow:0 0 0 4px rgba(15,118,110,.13); }
+    .unit { position:absolute; right:15px; top:50%; transform:translateY(-50%); color:var(--muted); font-weight:800; pointer-events:none; }
+    button { width:100%; min-height:58px; margin-top:14px; border:0; border-radius:13px; padding:13px 16px; color:#fff; background:var(--primary); box-shadow:0 8px 18px rgba(15,118,110,.24); font:inherit; font-size:1.05rem; font-weight:850; cursor:pointer; touch-action:manipulation; }
+    button:hover { background:var(--dark); }
+    button:active { transform:translateY(1px); }
+    .error { min-height:22px; margin:11px 0 0; color:var(--danger); font-weight:650; }
+    .results { display:none; margin-top:17px; overflow:hidden; border:1px solid var(--line); border-radius:13px; }
+    .results.show { display:block; }
+    .row { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:13px 14px; background:#fff; }
+    .row + .row { border-top:1px solid var(--line); }
+    .row span { color:#526171; }
+    .row strong { white-space:nowrap; font-size:1.08rem; }
+    .row.recommend { background:#e8faf6; }
+    .row.recommend strong { color:var(--dark); font-size:1.45rem; }
+    .formula { margin:14px 0 0; padding:11px; border-radius:11px; color:#475569; background:#f1f5f9; font-size:.88rem; line-height:1.45; text-align:center; }
+    .note { margin:12px 2px 0; color:var(--muted); font-size:.84rem; line-height:1.45; }
+    @media (min-width:520px) { main { padding-left:20px; padding-right:20px; } .card { padding:24px; } }
+  </style>
+</head>
+<body>
+  <main>
+    <a class="back" href="../../">← My Apps</a>
+    <header>
+      <h1>⚡ Tính dòng &amp; dây chì MBA</h1>
+      <p>Nhập công suất MBA để tính dòng phía 22 kV và chọn dây chì.</p>
+    </header>
+    <section class="card">
+      <form id="calculator" novalidate>
+        <label for="power">Công suất MBA</label>
+        <div class="input-wrap">
+          <input id="power" type="text" inputmode="decimal" autocomplete="off" placeholder="Ví dụ: 400" aria-describedby="error" autofocus>
+          <span class="unit">kVA</span>
+        </div>
+        <button type="submit">Tính dòng và chọn dây chì</button>
+        <p class="error" id="error" role="alert" aria-live="polite"></p>
+      </form>
+      <div class="results" id="results" aria-live="polite">
+        <div class="row"><span>MBA</span><strong id="power-result">—</strong></div>
+        <div class="row"><span>Idm</span><strong id="rated">—</strong></div>
+        <div class="row"><span>1,25 × Idm</span><strong id="fuse-current">—</strong></div>
+        <div class="row recommend"><span>Dây chì chọn</span><strong id="recommendation">—</strong></div>
+      </div>
+      <p class="formula">Idm = kVA ÷ (√3 × 22) &nbsp;·&nbsp; Dòng dây chì = 1,25 × Idm</p>
+      <p class="note" id="note">Cỡ dây chì tiêu chuẩn: 5, 10, 15, 20, 25 A.</p>
+    </section>
+  </main>
+  <script>
+    (() => {
+      const FUSES = [5, 10, 15, 20, 25];
+      const VOLTAGE_KV = 22;
+      const form = document.getElementById('calculator');
+      const powerInput = document.getElementById('power');
+      const error = document.getElementById('error');
+      const results = document.getElementById('results');
+      const note = document.getElementById('note');
+      const parseValue = (value) => Number(String(value).trim().replace(',', '.'));
+      const format2 = (value) => value.toLocaleString('vi-VN', { minimumFractionDigits:2, maximumFractionDigits:2 });
+      const formatPower = (value) => value.toLocaleString('vi-VN', { maximumFractionDigits:2 });
+      form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const kva = parseValue(powerInput.value);
+        error.textContent = '';
+        if (!Number.isFinite(kva) || kva <= 0) {
+          error.textContent = 'Vui lòng nhập công suất MBA lớn hơn 0.';
+          results.classList.remove('show');
+          powerInput.focus();
+          return;
+        }
+        const idm = kva / (Math.sqrt(3) * VOLTAGE_KV);
+        const required = 1.25 * idm;
+        const selected = FUSES.find((fuse) => fuse >= required);
+        document.getElementById('power-result').textContent = `${formatPower(kva)} kVA`;
+        document.getElementById('rated').textContent = `${format2(idm)} A`;
+        document.getElementById('fuse-current').textContent = `${format2(required)} A`;
+        document.getElementById('recommendation').textContent = selected ? `${selected} A` : '> 25 A';
+        note.textContent = selected ? 'Đã chọn cỡ tiêu chuẩn gần nhất lớn hơn hoặc bằng dòng tính toán.' : 'Dòng tính toán vượt danh sách 5–25 A. Cần kiểm tra phương án bảo vệ phù hợp.';
+        results.classList.add('show');
+      });
+    })();
+  </script>
+</body>
+</html>
+
