@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#166534">
+  <title>Tra cứu trọng lượng dây</title>
+  <style>
+    :root { color-scheme:light; --green:#166534; --green2:#15803d; --soft:#ecfdf3; --ink:#17201b; --muted:#647067; --line:#d8e2da; --warn:#b45309; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif; color:var(--ink); background:linear-gradient(160deg,#dcfce7 0,#f8fafc 45%,#e7efe9 100%); }
+    main { width:min(100%,620px); margin:auto; padding:calc(18px + env(safe-area-inset-top)) 14px calc(28px + env(safe-area-inset-bottom)); }
+    .back { display:inline-flex; align-items:center; min-height:44px; color:var(--green); font-weight:800; text-decoration:none; }
+    header { margin:6px 2px 18px; }
+    h1 { margin:0 0 6px; font-size:clamp(1.55rem,7vw,2.1rem); line-height:1.18; }
+    header p { margin:0; color:var(--muted); line-height:1.45; }
+    .tabs { display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:5px; border-radius:15px; background:#dce8df; }
+    .tab { min-height:48px; border:0; border-radius:11px; padding:9px; color:#38513f; background:transparent; font:inherit; font-weight:800; cursor:pointer; touch-action:manipulation; }
+    .tab.active { color:#fff; background:var(--green); box-shadow:0 5px 14px rgba(22,101,52,.22); }
+    .panel { display:none; margin-top:13px; padding:18px; border:1px solid rgba(100,116,139,.22); border-radius:20px; background:#fff; box-shadow:0 14px 35px rgba(15,23,42,.08); }
+    .panel.active { display:block; }
+    .field { margin-bottom:15px; }
+    label, .field-label { display:block; margin-bottom:7px; font-weight:800; }
+    select, input { width:100%; min-height:54px; border:1.5px solid #b7c7ba; border-radius:12px; padding:11px 13px; color:var(--ink); background:#fff; font:inherit; font-size:1.05rem; outline:none; }
+    select:focus, input:focus { border-color:var(--green2); box-shadow:0 0 0 4px rgba(21,128,61,.12); }
+    .with-unit { position:relative; }
+    .with-unit input { padding-right:58px; }
+    .unit { position:absolute; right:14px; top:50%; transform:translateY(-50%); color:var(--muted); font-weight:800; pointer-events:none; }
+    .segmented { display:grid; grid-template-columns:1fr 1fr; gap:7px; padding:4px; border-radius:12px; background:#eef3ef; }
+    .mode { min-height:45px; border:0; border-radius:9px; padding:8px; color:#435649; background:transparent; font:inherit; font-size:.92rem; font-weight:750; cursor:pointer; }
+    .mode.active { color:var(--green); background:#fff; box-shadow:0 2px 8px rgba(15,23,42,.09); }
+    .calculate { width:100%; min-height:56px; border:0; border-radius:13px; padding:12px 16px; color:#fff; background:var(--green2); font:inherit; font-size:1.05rem; font-weight:850; cursor:pointer; box-shadow:0 8px 18px rgba(21,128,61,.22); }
+    .calculate:active { transform:translateY(1px); }
+    .error { min-height:20px; margin:10px 1px 0; color:#b42318; font-weight:650; }
+    .result { display:none; margin-top:15px; overflow:hidden; border:1px solid #a9d6b6; border-radius:14px; background:var(--soft); }
+    .result.show { display:block; }
+    .result-row { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:12px 14px; }
+    .result-row + .result-row { border-top:1px solid #cce8d4; }
+    .result-row span { color:#50675a; }
+    .result-row strong { white-space:nowrap; text-align:right; font-size:1.08rem; }
+    .result-row.primary strong { color:var(--green); font-size:1.5rem; }
+    .formula { margin:13px 0 0; padding:10px; border-radius:10px; color:#526158; background:#f3f6f4; font-size:.84rem; text-align:center; line-height:1.4; }
+    .reference { margin-top:18px; }
+    .reference summary { min-height:44px; cursor:pointer; color:var(--green); font-weight:800; }
+    .table-wrap { max-height:290px; overflow:auto; border:1px solid var(--line); border-radius:11px; }
+    table { width:100%; border-collapse:collapse; font-size:.9rem; }
+    th,td { padding:9px 11px; border-bottom:1px solid var(--line); text-align:left; }
+    th { position:sticky; top:0; color:#fff; background:var(--green); }
+    td:last-child,th:last-child { text-align:right; }
+    .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .note { margin:13px 1px 0; color:var(--muted); font-size:.82rem; line-height:1.45; }
+    @media (min-width:540px) { main { padding-left:20px; padding-right:20px; } .panel { padding:23px; } }
+  </style>
+</head>
+<body>
+  <main>
+    <a class="back" href="../../">← My Apps</a>
+    <header>
+      <h1>⚖️ Tra cứu trọng lượng dây</h1>
+      <p>Tính nhanh trọng lượng dây, chiều dài và thanh cái đồng theo bảng tra cứu năm 2022.</p>
+    </header>
+
+    <nav class="tabs" aria-label="Chọn công cụ">
+      <button class="tab active" type="button" data-tab="wire">Dây / cáp</button>
+      <button class="tab" type="button" data-tab="copper">Thanh cái đồng</button>
+    </nav>
+
+    <section class="panel active" id="wire-panel">
+      <form id="wire-form" novalidate>
+        <div class="field">
+          <label for="wire-group">Loại dây</label>
+          <select id="wire-group">
+            <option value="A">Dây A</option>
+            <option value="AC">Dây AC</option>
+            <option value="AE">Dây AE</option>
+            <option value="VX">Dây VX</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="wire-type">Quy cách</label>
+          <select id="wire-type"></select>
+        </div>
+        <div class="field">
+          <span class="field-label">Cách tính</span>
+          <div class="segmented">
+            <button class="mode active" type="button" data-wire-mode="length">Nhập chiều dài</button>
+            <button class="mode" type="button" data-wire-mode="weight">Nhập khối lượng</button>
+          </div>
+        </div>
+        <div class="field">
+          <label id="wire-input-label" for="wire-input">Chiều dài</label>
+          <div class="with-unit">
+            <input id="wire-input" type="text" inputmode="decimal" autocomplete="off" placeholder="Ví dụ: 100">
+            <span class="unit" id="wire-input-unit">m</span>
+          </div>
+        </div>
+        <button class="calculate" type="submit">Tính</button>
+        <p class="error" id="wire-error" role="alert"></p>
+      </form>
+      <div class="result" id="wire-result" aria-live="polite">
+        <div class="result-row"><span>Quy cách</span><strong id="wire-result-type">—</strong></div>
+        <div class="result-row"><span>Định mức</span><strong id="wire-rate">—</strong></div>
+        <div class="result-row primary"><span id="wire-output-label">Khối lượng</span><strong id="wire-output">—</strong></div>
+      </div>
+      <p class="formula" id="wire-formula">Khối lượng = chiều dài × kg/m</p>
+      <details class="reference">
+        <summary>Xem bảng định mức kg/m</summary>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Quy cách</th><th>kg/m</th></tr></thead>
+            <tbody id="wire-table"></tbody>
+          </table>
+        </div>
+      </details>
+    </section>
+
+    <section class="panel" id="copper-panel">
+      <form id="copper-form" novalidate>
+        <div class="grid-2">
+          <div class="field">
+            <label for="width">Rộng</label>
+            <div class="with-unit"><input id="width" type="text" inputmode="decimal" placeholder="40"><span class="unit">mm</span></div>
+          </div>
+          <div class="field">
+            <label for="thickness">Dày</label>
+            <div class="with-unit"><input id="thickness" type="text" inputmode="decimal" placeholder="4"><span class="unit">mm</span></div>
+          </div>
+        </div>
+        <div class="field">
+          <span class="field-label">Cách tính</span>
+          <div class="segmented">
+            <button class="mode active" type="button" data-copper-mode="length">Nhập chiều dài</button>
+            <button class="mode" type="button" data-copper-mode="weight">Nhập khối lượng</button>
+          </div>
+        </div>
+        <div class="field">
+          <label id="copper-input-label" for="copper-input">Chiều dài</label>
+          <div class="with-unit">
+            <input id="copper-input" type="text" inputmode="decimal" autocomplete="off" placeholder="Ví dụ: 1">
+            <span class="unit" id="copper-input-unit">m</span>
+          </div>
+        </div>
+        <button class="calculate" type="submit">Tính</button>
+        <p class="error" id="copper-error" role="alert"></p>
+      </form>
+      <div class="result" id="copper-result" aria-live="polite">
+        <div class="result-row"><span>Tiết diện</span><strong id="copper-size">—</strong></div>
+        <div class="result-row"><span>Khối lượng 1 mét</span><strong id="copper-rate">—</strong></div>
+        <div class="result-row primary"><span id="copper-output-label">Khối lượng</span><strong id="copper-output">—</strong></div>
+      </div>
+      <p class="formula">Tỷ trọng đồng đỏ: 0,00895 · kg = rộng × dày × dài × 0,00895</p>
+    </section>
+
+    <p class="note">Nguồn số liệu: “trong luong day tran 2022.xlsx”, sheet BTHQ.TOAN. Kết quả làm tròn để tra cứu nhanh.</p>
+  </main>
+
+  <script>
+    (() => {
+      const wires = {
+        A: [['A 16',.044],['A 25',.068],['A 35',.095],['A 50',.136],['A 70',.191],['A 95',.257],['A 120',.322],['A 150',.407],['A 185',.503]],
+        AC: [['AC 16',.062],['AC 25',.092],['AC 35',.15],['AC 50',.196],['AC 70',.275],['AC 95',.386],['AC 120',.492],['AC 150',.617],['AC 185',.771]],
+        AE: [['AE 10',.09],['AE 16',.11],['AE 25',.14],['AE 35',.18],['AE 50',.22],['AE 70',.36],['AE 95',.42],['AE 120',.52],['AE 150',.65]],
+        VX: [['VX2x11',.12],['VX2x16',.14],['VX2x25',.22],['VX2x35',.28],['VX2x50',.38],['VX4x25',.42],['VX4x35',.56],['VX4x50',.78],['VX4x70',1.07],['VX4x95',1.35],['VX4x120',1.8],['VX4x150',2],['VX4x185',2.08]]
+      };
+      const density = .00895;
+      const number = value => Number(String(value).trim().replace(',', '.'));
+      const fmt = (value, digits=3) => value.toLocaleString('vi-VN',{maximumFractionDigits:digits});
+      let wireMode = 'length';
+      let copperMode = 'length';
+
+      document.querySelectorAll('.tab').forEach(button => button.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x === button));
+        document.querySelectorAll('.panel').forEach(x => x.classList.remove('active'));
+        document.getElementById(`${button.dataset.tab}-panel`).classList.add('active');
+      }));
+
+      const group = document.getElementById('wire-group');
+      const type = document.getElementById('wire-type');
+      const table = document.getElementById('wire-table');
+      function loadTypes() {
+        const list = wires[group.value];
+        type.innerHTML = list.map(([name,rate],i) => `<option value="${i}">${name} — ${fmt(rate)} kg/m</option>`).join('');
+        table.innerHTML = list.map(([name,rate]) => `<tr><td>${name}</td><td>${fmt(rate)}</td></tr>`).join('');
+        document.getElementById('wire-result').classList.remove('show');
+      }
+      group.addEventListener('change', loadTypes);
+      loadTypes();
+
+      document.querySelectorAll('[data-wire-mode]').forEach(button => button.addEventListener('click', () => {
+        wireMode = button.dataset.wireMode;
+        document.querySelectorAll('[data-wire-mode]').forEach(x => x.classList.toggle('active', x === button));
+        const fromLength = wireMode === 'length';
+        document.getElementById('wire-input-label').textContent = fromLength ? 'Chiều dài' : 'Khối lượng';
+        document.getElementById('wire-input-unit').textContent = fromLength ? 'm' : 'kg';
+        document.getElementById('wire-output-label').textContent = fromLength ? 'Khối lượng' : 'Chiều dài';
+        document.getElementById('wire-formula').textContent = fromLength ? 'Khối lượng = chiều dài × kg/m' : 'Chiều dài = khối lượng ÷ kg/m';
+        document.getElementById('wire-result').classList.remove('show');
+      }));
+
+      document.getElementById('wire-form').addEventListener('submit', event => {
+        event.preventDefault();
+        const input = number(document.getElementById('wire-input').value);
+        const error = document.getElementById('wire-error');
+        error.textContent = '';
+        if (!Number.isFinite(input) || input <= 0) { error.textContent = 'Vui lòng nhập số lớn hơn 0.'; return; }
+        const [name,rate] = wires[group.value][Number(type.value)];
+        const output = wireMode === 'length' ? input * rate : input / rate;
+        document.getElementById('wire-result-type').textContent = name;
+        document.getElementById('wire-rate').textContent = `${fmt(rate)} kg/m`;
+        document.getElementById('wire-output').textContent = wireMode === 'length' ? `${fmt(output)} kg` : `${fmt(output)} m`;
+        document.getElementById('wire-result').classList.add('show');
+      });
+
+      document.querySelectorAll('[data-copper-mode]').forEach(button => button.addEventListener('click', () => {
+        copperMode = button.dataset.copperMode;
+        document.querySelectorAll('[data-copper-mode]').forEach(x => x.classList.toggle('active', x === button));
+        const fromLength = copperMode === 'length';
+        document.getElementById('copper-input-label').textContent = fromLength ? 'Chiều dài' : 'Khối lượng';
+        document.getElementById('copper-input-unit').textContent = fromLength ? 'm' : 'kg';
+        document.getElementById('copper-output-label').textContent = fromLength ? 'Khối lượng' : 'Chiều dài';
+        document.getElementById('copper-result').classList.remove('show');
+      }));
+
+      document.getElementById('copper-form').addEventListener('submit', event => {
+        event.preventDefault();
+        const width = number(document.getElementById('width').value);
+        const thickness = number(document.getElementById('thickness').value);
+        const input = number(document.getElementById('copper-input').value);
+        const error = document.getElementById('copper-error');
+        error.textContent = '';
+        if (![width,thickness,input].every(value => Number.isFinite(value) && value > 0)) { error.textContent = 'Vui lòng nhập đủ các số lớn hơn 0.'; return; }
+        const rate = width * thickness * density;
+        const output = copperMode === 'length' ? input * rate : input / rate;
+        document.getElementById('copper-size').textContent = `${fmt(width)} × ${fmt(thickness)} mm`;
+        document.getElementById('copper-rate').textContent = `${fmt(rate)} kg/m`;
+        document.getElementById('copper-output').textContent = copperMode === 'length' ? `${fmt(output)} kg` : `${fmt(output)} m`;
+        document.getElementById('copper-result').classList.add('show');
+      });
+    })();
+  </script>
+</body>
+</html>
