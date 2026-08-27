@@ -30,9 +30,11 @@
     .row + .row { border-top:1px solid var(--line); }
     .row span { color:#526171; }
     .row strong { white-space:nowrap; font-size:1.08rem; }
+    .row.lv { background:#f0fdfa; }
+    .row.lv strong { color:var(--dark); }
     .row.recommend { background:#e8faf6; }
     .row.recommend strong { color:var(--dark); font-size:1.45rem; }
-    .formula { margin:14px 0 0; padding:11px; border-radius:11px; color:#475569; background:#f1f5f9; font-size:.88rem; line-height:1.45; text-align:center; }
+    .formula { margin:14px 0 0; padding:11px; border-radius:11px; color:#475569; background:#f1f5f9; font-size:.88rem; line-height:1.55; text-align:center; }
     .note { margin:12px 2px 0; color:var(--muted); font-size:.84rem; line-height:1.45; }
     @media (min-width:520px) { main { padding-left:20px; padding-right:20px; } .card { padding:24px; } }
   </style>
@@ -42,7 +44,7 @@
     <a class="back" href="../../">← My Apps</a>
     <header>
       <h1>⚡ Tính dòng &amp; dây chì MBA</h1>
-      <p>Nhập công suất MBA để tính dòng phía 22 kV và chọn dây chì.</p>
+      <p>Nhập công suất MBA để tính dòng phía 22 kV, phía hạ thế 0,4 kV và chọn dây chì.</p>
     </header>
     <section class="card">
       <form id="calculator" novalidate>
@@ -56,18 +58,20 @@
       </form>
       <div class="results" id="results" aria-live="polite">
         <div class="row"><span>MBA</span><strong id="power-result">—</strong></div>
-        <div class="row"><span>Idm</span><strong id="rated">—</strong></div>
-        <div class="row"><span>1,25 × Idm</span><strong id="fuse-current">—</strong></div>
+        <div class="row"><span>Dòng định mức trung thế 22 kV</span><strong id="rated-mv">—</strong></div>
+        <div class="row lv"><span>Dòng định mức hạ thế 0,4 kV</span><strong id="rated-lv">—</strong></div>
+        <div class="row"><span>1,25 × Iđm trung thế</span><strong id="fuse-current">—</strong></div>
         <div class="row recommend"><span>Dây chì chọn</span><strong id="recommendation">—</strong></div>
       </div>
-      <p class="formula">Idm = kVA ÷ (√3 × 22) &nbsp;·&nbsp; Dòng dây chì = 1,25 × Idm</p>
+      <p class="formula">Itrung thế = kVA ÷ (√3 × 22)<br>Ihạ thế = kVA ÷ (√3 × 0,4)<br>Dòng dây chì = 1,25 × Itrung thế</p>
       <p class="note" id="note">Cỡ dây chì tiêu chuẩn: 5, 10, 15, 20, 25 A.</p>
     </section>
   </main>
   <script>
     (() => {
       const FUSES = [5, 10, 15, 20, 25];
-      const VOLTAGE_KV = 22;
+      const MV_VOLTAGE_KV = 22;
+      const LV_VOLTAGE_KV = 0.4;
       const form = document.getElementById('calculator');
       const powerInput = document.getElementById('power');
       const error = document.getElementById('error');
@@ -76,6 +80,7 @@
       const parseValue = (value) => Number(String(value).trim().replace(',', '.'));
       const format2 = (value) => value.toLocaleString('vi-VN', { minimumFractionDigits:2, maximumFractionDigits:2 });
       const formatPower = (value) => value.toLocaleString('vi-VN', { maximumFractionDigits:2 });
+
       form.addEventListener('submit', (event) => {
         event.preventDefault();
         const kva = parseValue(powerInput.value);
@@ -86,18 +91,21 @@
           powerInput.focus();
           return;
         }
-        const idm = kva / (Math.sqrt(3) * VOLTAGE_KV);
-        const required = 1.25 * idm;
+
+        const ratedMv = kva / (Math.sqrt(3) * MV_VOLTAGE_KV);
+        const ratedLv = kva / (Math.sqrt(3) * LV_VOLTAGE_KV);
+        const required = 1.25 * ratedMv;
         const selected = FUSES.find((fuse) => fuse >= required);
+
         document.getElementById('power-result').textContent = `${formatPower(kva)} kVA`;
-        document.getElementById('rated').textContent = `${format2(idm)} A`;
+        document.getElementById('rated-mv').textContent = `${format2(ratedMv)} A`;
+        document.getElementById('rated-lv').textContent = `${format2(ratedLv)} A`;
         document.getElementById('fuse-current').textContent = `${format2(required)} A`;
         document.getElementById('recommendation').textContent = selected ? `${selected} A` : '> 25 A';
-        note.textContent = selected ? 'Đã chọn cỡ tiêu chuẩn gần nhất lớn hơn hoặc bằng dòng tính toán.' : 'Dòng tính toán vượt danh sách 5–25 A. Cần kiểm tra phương án bảo vệ phù hợp.';
+        note.textContent = selected ? 'Dây chì được chọn theo dòng trung thế 22 kV, lấy cỡ tiêu chuẩn gần nhất lớn hơn hoặc bằng dòng tính toán.' : 'Dòng tính toán phía trung thế vượt danh sách 5–25 A. Cần kiểm tra phương án bảo vệ phù hợp.';
         results.classList.add('show');
       });
     })();
   </script>
 </body>
 </html>
-
