@@ -1,6 +1,6 @@
 // SERVICE WORKER - My Apps (Thành Nam)
 // Tăng phiên bản mỗi lần cập nhật để điện thoại bỏ cache cũ.
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v3';
 const CACHE_NAME = `myapps-cache-${CACHE_VERSION}`;
 
 const APP_SHELL = [
