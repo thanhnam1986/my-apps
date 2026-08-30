@@ -3,158 +3,26 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#0f766e">
+  <meta name="theme-color" content="#eafbf8">
   <title>Quản lý thu chi</title>
   <style>
-    :root { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #183b39; background: #ecfdf5; }
     * { box-sizing: border-box; }
-    body { min-height: 100svh; margin: 0; padding: max(20px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); background: radial-gradient(circle at top, #ccfbf1, transparent 42%), linear-gradient(160deg, #f0fdfa, #ecfeff); }
-    main { width: min(100%, 560px); margin: auto; }
-    header { text-align: center; margin: 8px 0 22px; }
-    h1 { margin: 0 0 7px; font-size: clamp(1.8rem, 8vw, 2.35rem); color: #115e59; }
-    header p { margin: 0; color: #5c7774; }
-    form, .sheet-link { background: rgba(255,255,255,.96); border: 1px solid rgba(15,118,110,.13); border-radius: 24px; box-shadow: 0 16px 45px rgba(15,118,110,.12); }
-    .summary { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; margin-bottom: 16px; }
-    .summary-card { min-height: 92px; padding: 13px 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 18px; text-align: center; box-shadow: 0 10px 28px rgba(15,118,110,.1); }
-    .summary-card.in { background: #ecfdf5; border: 1px solid #bbf7d0; }
-    .summary-card.out { background: #fff7ed; border: 1px solid #fed7aa; }
-    .summary-card.balance { background: #eef2ff; border: 1px solid #c7d2fe; }
-    .summary-label { color: #61706e; font-size: .75rem; font-weight: 650; }
-    .summary-value { margin-top: 6px; font-size: clamp(.93rem,4vw,1.15rem); font-weight: 800; }
-    .summary-note { margin: -7px 0 12px; text-align: center; color: #627875; font-size: .78rem; }
-    form { padding: 20px; }
-    label { display: block; margin: 0 0 7px; font-size: .9rem; font-weight: 700; }
-    input, textarea { width: 100%; min-height: 50px; padding: 12px 14px; border: 2px solid #d9e8e6; border-radius: 14px; background: #fff; color: #183b39; font: inherit; outline: none; }
-    textarea { min-height: 82px; resize: vertical; }
-    input:focus, textarea:focus { border-color: #14b8a6; box-shadow: 0 0 0 4px rgba(20,184,166,.13); }
-    .date-field { margin-bottom: 16px; }
-    .entry { margin-top: 14px; padding: 16px; border-radius: 18px; }
-    .income { background: #ecfdf5; border: 1px solid #bbf7d0; }
-    .expense { background: #fff7ed; border: 1px solid #fed7aa; }
-    .entry h2 { margin: 0 0 13px; font-size: 1.08rem; }
-    .entry-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
-    .unit { margin: 6px 2px 0; color: #6b7c79; font-size: .78rem; }
-    .submit { width: 100%; min-height: 54px; margin-top: 18px; border: 0; border-radius: 15px; background: #0f766e; color: white; font: inherit; font-weight: 750; cursor: pointer; }
-    .submit:disabled { opacity: .62; cursor: wait; }
-    .status { min-height: 22px; margin: 12px 2px 0; text-align: center; font-size: .9rem; font-weight: 650; }
-    .status.ok { color: #087443; } .status.error { color: #b42318; }
-    .sheet-link { margin-top: 16px; padding: 14px; }
-    .sheet-link a { min-height: 52px; display: flex; align-items: center; justify-content: center; gap: 9px; border-radius: 14px; background: #eef2ff; color: #3730a3; text-decoration: none; font-weight: 750; }
-    @media (max-width: 430px) { .entry-grid { grid-template-columns: 1fr; } .summary { gap: 7px; } .summary-card { padding-inline: 4px; } }
+    html, body { width: 100%; min-height: 100%; margin: 0; background: #eafbf8; }
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    .app-frame { width: 100%; height: 100svh; border: 0; display: block; background: #eafbf8; }
+    .fallback { position: fixed; right: 12px; bottom: max(12px, env(safe-area-inset-bottom)); z-index: 10; }
+    .fallback a { display: inline-flex; min-height: 42px; align-items: center; padding: 8px 13px; border-radius: 999px; background: #fff; color: #126f67; font-size: .82rem; font-weight: 700; text-decoration: none; box-shadow: 0 3px 16px rgba(0,0,0,.14); }
   </style>
 </head>
 <body>
-  <main>
-    <header><h1>💰 Quản lý thu chi</h1><p>Nhập nhanh các khoản trong ngày</p></header>
-    <section class="summary" aria-label="Tổng hợp thu chi">
-      <div class="summary-card in"><span class="summary-label">Tổng thu tháng</span><strong class="summary-value" id="summary-income">—</strong></div>
-      <div class="summary-card out"><span class="summary-label">Tổng chi tháng</span><strong class="summary-value" id="summary-expense">—</strong></div>
-      <div class="summary-card balance"><span class="summary-label">Còn lại</span><strong class="summary-value" id="summary-balance">—</strong></div>
-    </section>
-    <div class="summary-note" id="summary-note">Đang tải tổng hợp…</div>
-    <form id="entry-form" action="https://script.google.com/macros/s/AKfycbyh0OFsVLAkcPqrvpfFPIcFrgXDvze2xc06om5U7kTJp5obb6LDOVlfNrWHnGrBwoZS/exec">
-      <div class="date-field"><label for="date">Ngày</label><input id="date" name="date" type="date" required></div>
-      <section class="entry income">
-        <h2>💵 Khoản thu</h2>
-        <div class="entry-grid">
-          <div><label for="income-amount">Số tiền</label><input id="income-amount" name="incomeAmount" type="number" min="0" step="1" inputmode="numeric" placeholder="0"><div class="unit">Đơn vị: nghìn đồng</div></div>
-          <div><label for="income-note">Hôm nay thu gì?</label><textarea id="income-note" name="incomeNote" placeholder="Ví dụ: Lĩnh lương"></textarea></div>
-        </div>
-      </section>
-      <section class="entry expense">
-        <h2>🧾 Khoản chi</h2>
-        <div class="entry-grid">
-          <div><label for="expense-amount">Số tiền</label><input id="expense-amount" name="expenseAmount" type="number" min="0" step="1" inputmode="numeric" placeholder="0"><div class="unit">Đơn vị: nghìn đồng</div></div>
-          <div><label for="expense-note">Hôm nay chi gì?</label><textarea id="expense-note" name="expenseNote" placeholder="Ví dụ: Mua đồ ăn, đổ xăng"></textarea></div>
-        </div>
-      </section>
-      <button class="submit" id="submit-button" type="submit">Ghi vào Google Sheets</button>
-      <div class="status" id="status" role="status" aria-live="polite"></div>
-    </form>
-    <div class="sheet-link"><a href="https://docs.google.com/spreadsheets/d/1HOON5oFW0Lrx9PE8C96l3U_TcuYEVdxhtJ7ngr0Tfuw/edit" target="_blank" rel="noopener">📊 Mở Google Sheets để xem chi tiết</a></div>
-  </main>
-  <script>
-    const hostedAppUrl = "https://script.google.com/macros/s/AKfycbyh0OFsVLAkcPqrvpfFPIcFrgXDvze2xc06om5U7kTJp5obb6LDOVlfNrWHnGrBwoZS/exec?app=1";
-    const isHostedByGoogle = Boolean(window.google && google.script && google.script.run);
-    if (!isHostedByGoogle) window.location.replace(hostedAppUrl);
-    const form = document.getElementById("entry-form");
-    const status = document.getElementById("status");
-    const submitButton = document.getElementById("submit-button");
-    const dateInput = document.getElementById("date");
-    const scriptUrl = form.action;
-    const isConnected = form.getAttribute("action") !== "__APPS_SCRIPT_URL__";
-    const now = new Date();
-    dateInput.value = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
-
-    function loadSummary() {
-      if (!isConnected) {
-        document.getElementById("summary-note").textContent = "Chưa kết nối Google Sheets.";
-        return;
-      }
-      document.getElementById("summary-note").textContent = "Đang tải tổng hợp…";
-      sendRequest({ date: dateInput.value });
-    }
-
-    function sendRequest(params) {
-      if (!isHostedByGoogle) return;
-      const runner = google.script.run
-        .withSuccessHandler(data => window.expenseAppCallback(data))
-        .withFailureHandler(() => {
-          if (params.action === "write") {
-            submitButton.disabled = false; submitButton.textContent = "Ghi vào Google Sheets";
-            status.className = "status error"; status.textContent = "Không kết nối được Google Sheets. Anh thử lại nhé.";
-          } else document.getElementById("summary-note").textContent = "Không tải được tổng hợp tháng.";
-        });
-      if (params.action === "write") runner.saveEntryForApp(params);
-      else runner.getSummaryForApp(params.date);
-    }
-
-    function formatAmount(value) {
-      return new Intl.NumberFormat("vi-VN").format(Number(value) || 0) + " nghìn";
-    }
-
-    dateInput.addEventListener("change", loadSummary);
-
-    form.addEventListener("submit", event => {
-      event.preventDefault();
-      if (!isConnected) {
-        status.className = "status error"; status.textContent = "Chưa kết nối Google Sheets."; return;
-      }
-      const incomeAmount = Number(form.incomeAmount.value || 0);
-      const expenseAmount = Number(form.expenseAmount.value || 0);
-      if (!incomeAmount && !expenseAmount) {
-        status.className = "status error"; status.textContent = "Anh nhập ít nhất một khoản thu hoặc chi nhé."; return;
-      }
-      if (incomeAmount && !form.incomeNote.value.trim()) {
-        status.className = "status error"; status.textContent = "Anh chưa nhập nội dung khoản thu."; return;
-      }
-      if (expenseAmount && !form.expenseNote.value.trim()) {
-        status.className = "status error"; status.textContent = "Anh chưa nhập nội dung khoản chi."; return;
-      }
-      submitButton.disabled = true; submitButton.textContent = "Đang ghi dữ liệu…"; status.className = "status"; status.textContent = "";
-      sendRequest({ action: "write", date: dateInput.value, incomeNote: form.incomeNote.value, incomeAmount, expenseNote: form.expenseNote.value, expenseAmount });
-      window.setTimeout(() => { if (submitButton.disabled) { submitButton.disabled = false; submitButton.textContent = "Ghi vào Google Sheets"; status.className = "status error"; status.textContent = "Google Sheets chưa phản hồi. Anh thử gửi lại."; } }, 15000);
-    });
-
-    window.expenseAppCallback = data => {
-      if (!data) return;
-      if (data.type === "expense-summary-result") {
-        if (data.success) {
-          document.getElementById("summary-income").textContent = formatAmount(data.income);
-          document.getElementById("summary-expense").textContent = formatAmount(data.expense);
-          document.getElementById("summary-balance").textContent = formatAmount(data.balance);
-          document.getElementById("summary-note").textContent = "Số liệu trực tiếp từ hai dòng Tổng và Còn lại của " + data.month;
-        } else document.getElementById("summary-note").textContent = data.message;
-        return;
-      }
-      if (data.type !== "expense-app-result") return;
-      submitButton.disabled = false; submitButton.textContent = "Ghi vào Google Sheets";
-      status.className = data.success ? "status ok" : "status error"; status.textContent = data.message;
-      if (data.success) { form.incomeNote.value = ""; form.incomeAmount.value = ""; form.expenseNote.value = ""; form.expenseAmount.value = ""; loadSummary(); }
-    };
-    if ("serviceWorker" in navigator) navigator.serviceWorker.getRegistrations().then(items => Promise.all(items.map(item => item.unregister()))).catch(() => {});
-    if ("caches" in window) caches.keys().then(keys => Promise.all(keys.map(key => caches.delete(key)))).catch(() => {});
-    loadSummary();
-  </script>
+  <iframe
+    class="app-frame"
+    title="Quản lý thu chi"
+    src="https://script.google.com/macros/s/AKfycbyh0OFsVLAkcPqrvpfFPIcFrgXDvze2xc06om5U7kTJp5obb6LDOVlfNrWHnGrBwoZS/exec?app=1&amp;embed=1"
+    allow="clipboard-write"
+  ></iframe>
+  <div class="fallback">
+    <a href="https://script.google.com/macros/s/AKfycbyh0OFsVLAkcPqrvpfFPIcFrgXDvze2xc06om5U7kTJp5obb6LDOVlfNrWHnGrBwoZS/exec?app=1" target="_blank" rel="noopener">Mở riêng</a>
+  </div>
 </body>
 </html>
