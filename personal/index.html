@@ -154,6 +154,15 @@
       status.className = data.success ? "status ok" : "status error"; status.textContent = data.message;
       if (data.success) { form.incomeNote.value = ""; form.incomeAmount.value = ""; form.expenseNote.value = ""; form.expenseAmount.value = ""; loadSummary(); }
     };
+    if ("serviceWorker" in navigator) {
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener("controllerchange", () => {
+        if (refreshing) return;
+        refreshing = true;
+        window.location.reload();
+      });
+      window.addEventListener("load", () => navigator.serviceWorker.register("../sw.js").then(registration => registration.update()).catch(() => {}));
+    }
     loadSummary();
   </script>
 </body>
