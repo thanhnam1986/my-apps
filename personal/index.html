@@ -32,7 +32,7 @@
     .income { background: #ecfdf5; border: 1px solid #bbf7d0; }
     .expense { background: #fff7ed; border: 1px solid #fed7aa; }
     .entry h2 { margin: 0 0 13px; font-size: 1.08rem; }
-    .entry-grid { display: grid; grid-template-columns: 1fr 135px; gap: 10px; align-items: end; }
+    .entry-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
     .unit { margin: 6px 2px 0; color: #6b7c79; font-size: .78rem; }
     .submit { width: 100%; min-height: 54px; margin-top: 18px; border: 0; border-radius: 15px; background: #0f766e; color: white; font: inherit; font-weight: 750; cursor: pointer; }
     .submit:disabled { opacity: .62; cursor: wait; }
@@ -57,15 +57,15 @@
       <section class="entry income">
         <h2>💵 Khoản thu</h2>
         <div class="entry-grid">
-          <div><label for="income-note">Hôm nay thu gì?</label><textarea id="income-note" name="incomeNote" placeholder="Ví dụ: Lĩnh lương"></textarea></div>
           <div><label for="income-amount">Số tiền</label><input id="income-amount" name="incomeAmount" type="number" min="0" step="1" inputmode="numeric" placeholder="0"><div class="unit">Đơn vị: nghìn đồng</div></div>
+          <div><label for="income-note">Hôm nay thu gì?</label><textarea id="income-note" name="incomeNote" placeholder="Ví dụ: Lĩnh lương"></textarea></div>
         </div>
       </section>
       <section class="entry expense">
         <h2>🧾 Khoản chi</h2>
         <div class="entry-grid">
-          <div><label for="expense-note">Hôm nay chi gì?</label><textarea id="expense-note" name="expenseNote" placeholder="Ví dụ: Mua đồ ăn, đổ xăng"></textarea></div>
           <div><label for="expense-amount">Số tiền</label><input id="expense-amount" name="expenseAmount" type="number" min="0" step="1" inputmode="numeric" placeholder="0"><div class="unit">Đơn vị: nghìn đồng</div></div>
+          <div><label for="expense-note">Hôm nay chi gì?</label><textarea id="expense-note" name="expenseNote" placeholder="Ví dụ: Mua đồ ăn, đổ xăng"></textarea></div>
         </div>
       </section>
       <button class="submit" id="submit-button" type="submit">Ghi vào Google Sheets</button>
@@ -74,6 +74,9 @@
     <div class="sheet-link"><a href="https://docs.google.com/spreadsheets/d/1HOON5oFW0Lrx9PE8C96l3U_TcuYEVdxhtJ7ngr0Tfuw/edit" target="_blank" rel="noopener">📊 Mở Google Sheets để xem chi tiết</a></div>
   </main>
   <script>
+    const hostedAppUrl = "https://script.google.com/macros/s/AKfycbyh0OFsVLAkcPqrvpfFPIcFrgXDvze2xc06om5U7kTJp5obb6LDOVlfNrWHnGrBwoZS/exec?app=1";
+    const isHostedByGoogle = Boolean(window.google && google.script && google.script.run);
+    if (!isHostedByGoogle) window.location.replace(hostedAppUrl);
     const form = document.getElementById("entry-form");
     const status = document.getElementById("status");
     const submitButton = document.getElementById("submit-button");
@@ -93,22 +96,17 @@
     }
 
     function sendRequest(params) {
-      const url = new URL(scriptUrl);
-      Object.entries(params).forEach(([key, value]) => url.searchParams.set(key, value));
-      url.searchParams.set("callback", "expenseAppCallback");
-      url.searchParams.set("_", Date.now());
-      const request = document.createElement("script");
-      request.src = url.toString();
-      request.async = true;
-      request.onload = () => request.remove();
-      request.onerror = () => {
-        request.remove();
-        if (params.action === "write") {
-          submitButton.disabled = false; submitButton.textContent = "Ghi vào Google Sheets";
-          status.className = "status error"; status.textContent = "Không kết nối được Google Sheets. Anh thử lại nhé.";
-        } else document.getElementById("summary-note").textContent = "Không tải được tổng hợp tháng.";
-      };
-      document.head.appendChild(request);
+      if (!isHostedByGoogle) return;
+      const runner = google.script.run
+        .withSuccessHandler(data => window.expenseAppCallback(data))
+        .withFailureHandler(() => {
+          if (params.action === "write") {
+            submitButton.disabled = false; submitButton.textContent = "Ghi vào Google Sheets";
+            status.className = "status error"; status.textContent = "Không kết nối được Google Sheets. Anh thử lại nhé.";
+          } else document.getElementById("summary-note").textContent = "Không tải được tổng hợp tháng.";
+        });
+      if (params.action === "write") runner.saveEntryForApp(params);
+      else runner.getSummaryForApp(params.date);
     }
 
     function formatAmount(value) {
@@ -154,15 +152,8 @@
       status.className = data.success ? "status ok" : "status error"; status.textContent = data.message;
       if (data.success) { form.incomeNote.value = ""; form.incomeAmount.value = ""; form.expenseNote.value = ""; form.expenseAmount.value = ""; loadSummary(); }
     };
-    if ("serviceWorker" in navigator) {
-      let refreshing = false;
-      navigator.serviceWorker.addEventListener("controllerchange", () => {
-        if (refreshing) return;
-        refreshing = true;
-        window.location.reload();
-      });
-      window.addEventListener("load", () => navigator.serviceWorker.register("../sw.js").then(registration => registration.update()).catch(() => {}));
-    }
+    if ("serviceWorker" in navigator) navigator.serviceWorker.getRegistrations().then(items => Promise.all(items.map(item => item.unregister()))).catch(() => {});
+    if ("caches" in window) caches.keys().then(keys => Promise.all(keys.map(key => caches.delete(key)))).catch(() => {});
     loadSummary();
   </script>
 </body>
