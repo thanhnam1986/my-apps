@@ -1,242 +1,125 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Apps - Thành Nam </title>
-
-    <!-- ===== PWA: manifest + icon + theme-color ===== -->
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#667eea">
-    <link rel="icon" href="icon-192.png">
-    <link rel="apple-touch-icon" href="icon-192.png">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="My Apps">
-    <!-- ================================================ -->
-
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            padding: 20px;
-        }
-
-        .header {
-            text-align: center;
-            color: white;
-            margin-bottom: 30px;
-            padding-top: 20px;
-        }
-
-        .header h1 {
-            font-size: 32px;
-            font-weight: 700;
-            margin-bottom: 10px;
-            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-        }
-
-        .header p {
-            font-size: 16px;
-            opacity: 0.9;
-        }
-
-        .container {
-            flex: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .apps-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 20px;
-            width: 100%;
-            max-width: 600px;
-        }
-
-        .app-card {
-            background: white;
-            border-radius: 20px;
-            padding: 20px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-            text-decoration: none;
-            color: inherit;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 160px;
-        }
-
-        .app-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
-        }
-
-        .app-card:active {
-            transform: scale(0.95);
-        }
-
-        .app-icon {
-            font-size: 48px;
-            margin-bottom: 12px;
-            display: block;
-        }
-
-        .app-name {
-            font-size: 15px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 8px;
-            line-height: 1.3;
-        }
-
-        .app-status {
-            font-size: 12px;
-            color: #999;
-            font-weight: 500;
-        }
-
-        .app-card.coming-soon {
-            opacity: 0.75;
-            cursor: not-allowed;
-        }
-
-        .app-card.coming-soon:hover {
-            transform: none;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-        }
-
-        .footer {
-            text-align: center;
-            color: white;
-            padding: 20px;
-            font-size: 14px;
-            opacity: 0.9;
-            margin-top: 30px;
-        }
-
-        /* Responsive */
-        @media (max-width: 480px) {
-            .apps-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 15px;
-            }
-
-            .app-card {
-                min-height: 150px;
-                padding: 15px;
-            }
-
-            .app-icon {
-                font-size: 40px;
-                margin-bottom: 10px;
-            }
-
-            .app-name {
-                font-size: 13px;
-            }
-
-            .header h1 {
-                font-size: 24px;
-            }
-        }
-
-        @media (max-width: 320px) {
-            .apps-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 12px;
-            }
-
-            .app-card {
-                min-height: 140px;
-                padding: 12px;
-            }
-
-            .app-icon {
-                font-size: 36px;
-                margin-bottom: 8px;
-            }
-
-            .app-name {
-                font-size: 12px;
-            }
-
-            .header h1 {
-                font-size: 20px;
-            }
-        }
-    </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#5b5bd6">
+  <meta name="description" content="My Apps của Thành Nam - Công việc và Cá nhân">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon-192.png">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="My Apps">
+  <title>My Apps - Thành Nam</title>
+  <style>
+    :root { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #20223a; background: #5755c9; }
+    * { box-sizing: border-box; }
+    body { min-height: 100svh; margin: 0; padding: max(24px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left)); background: linear-gradient(145deg, #667eea 0%, #764ba2 100%); }
+    .page { width: min(100%, 680px); min-height: calc(100svh - 48px); margin: auto; display: flex; flex-direction: column; }
+    header { padding: 14px 0 30px; text-align: center; color: #fff; }
+    h1 { margin: 0 0 8px; font-size: clamp(1.8rem, 8vw, 2.5rem); letter-spacing: -0.035em; text-shadow: 0 3px 14px rgba(31, 28, 80, 0.22); }
+    header p { margin: 0; opacity: 0.9; }
+    .choice-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    button, a { font: inherit; }
+    .choice { min-height: 190px; padding: 22px 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; border: 0; border-radius: 24px; background: rgba(255,255,255,.97); color: #282a44; cursor: pointer; box-shadow: 0 14px 36px rgba(31,28,80,.22); transition: transform .16s ease; touch-action: manipulation; }
+    .choice:active { transform: scale(.97); }
+    .choice-icon { font-size: 3.5rem; line-height: 1; }
+    .choice-title { font-size: 1.15rem; font-weight: 750; }
+    .choice-note { color: #77798c; font-size: .82rem; }
+    .work-panel { display: none; margin-top: 18px; padding: 20px; border-radius: 24px; background: rgba(255,255,255,.96); box-shadow: 0 14px 36px rgba(31,28,80,.2); }
+    .work-panel.open { display: block; }
+    .work-panel h2 { margin: 0 0 16px; font-size: 1.2rem; }
+    .apps-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .app-link { min-height: 112px; padding: 14px 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; border: 1px solid #ececf5; border-radius: 18px; color: #292b42; background: #f8f8fe; text-align: center; text-decoration: none; font-size: .9rem; font-weight: 650; }
+    .app-link span { font-size: 1.9rem; }
+    footer { margin-top: auto; padding: 28px 0 4px; text-align: center; color: rgba(255,255,255,.86); font-size: .85rem; }
+    dialog { width: min(calc(100% - 36px), 390px); padding: 0; border: 0; border-radius: 24px; color: #25273d; box-shadow: 0 24px 70px rgba(26,23,70,.35); }
+    dialog::backdrop { background: rgba(25,23,63,.62); backdrop-filter: blur(4px); }
+    .modal-content { padding: 26px 22px 22px; }
+    .modal-content h2 { margin: 0 0 8px; }
+    .modal-content p { margin: 0 0 18px; color: #66687a; line-height: 1.45; }
+    label { display: block; margin-bottom: 7px; font-size: .9rem; font-weight: 650; }
+    input { width: 100%; min-height: 52px; padding: 12px 14px; border: 2px solid #dedfeb; border-radius: 14px; font-size: 1.05rem; outline: none; }
+    input:focus { border-color: #6865d8; box-shadow: 0 0 0 4px rgba(104,101,216,.13); }
+    .error { min-height: 20px; margin: 8px 0 0 !important; color: #c62828 !important; font-size: .86rem; }
+    .modal-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+    .modal-button { min-height: 50px; border: 0; border-radius: 14px; cursor: pointer; font-weight: 700; }
+    .cancel { background: #eeeef5; color: #515365; }
+    .unlock { background: #5f5bd3; color: #fff; }
+    @media (max-width: 370px) { .choice-grid { gap: 11px; } .choice { min-height: 165px; padding-inline: 8px; } .choice-icon { font-size: 3rem; } .choice-title { font-size: 1rem; } .apps-grid { grid-template-columns: 1fr; } }
+    @media (prefers-reduced-motion: reduce) { .choice { transition: none; } }
+  </style>
 </head>
 <body>
-    <div class="header">
-        <h1>📱 My Apps</h1>
-        
-    </div>
-
-    <div class="container">
+  <div class="page">
+    <header><h1>📱 My Apps</h1><p>Anh muốn mở mục nào?</p></header>
+    <main>
+      <div class="choice-grid">
+        <button class="choice" id="work-button" type="button" aria-expanded="false" aria-controls="work-panel">
+          <span class="choice-icon" aria-hidden="true">🧰</span><span class="choice-title">Công việc</span><span class="choice-note">4 tiện ích</span>
+        </button>
+        <button class="choice" id="personal-button" type="button">
+          <span class="choice-icon" aria-hidden="true">🔐</span><span class="choice-title">Cá nhân</span><span class="choice-note">Có mật khẩu</span>
+        </button>
+      </div>
+      <section class="work-panel" id="work-panel" aria-label="Ứng dụng công việc">
+        <h2>Ứng dụng công việc</h2>
         <div class="apps-grid">
-            <!-- GPS App -->
-            <a href="gps/" class="app-card">
-                <span class="app-icon">📍</span>
-                <div class="app-name">Đo GPS</div>
-                <div class="app-status">Hoạt động</div>
-            </a>
-
-                
-          
-
-            <!-- Tính dòng và dây chì MBA -->
-            <a href="apps/tinh-day-chi-mba/" class="app-card">
-                <span class="app-icon">⚡</span>
-                <div class="app-name">Tính dây chì MBA</div>
-                <div class="app-status">Hoạt động</div>
-            </a>
-                        <!-- App: Tra cứu trọng lượng d&#226;y -->
-            <a href="apps/tra-cuu-trong-luong-day/" class="app-card">
-                <span class="app-icon">📦</span>
-                <div class="app-name">Tra cứu trọng lượng d&#226;y</div>
-                <div class="app-status">Hoạt động</div>
-            </a>
-
-                        <!-- App: T&#237;nh điện trở 1 chiều MBA -->
-            <a href="apps/tinh-dien-tro-1-chieu-mba/" class="app-card">
-                <span class="app-icon">📦</span>
-                <div class="app-name">T&#237;nh điện trở 1 chiều MBA</div>
-                <div class="app-status">Hoạt động</div>
-            </a>
-
-            <!-- AUTO-APPS:END -->
+          <a class="app-link" href="gps/"><span aria-hidden="true">📍</span>Đo GPS</a>
+          <a class="app-link" href="apps/tinh-day-chi-mba/"><span aria-hidden="true">⚡</span>Tính dây chì MBA</a>
+          <a class="app-link" href="apps/tra-cuu-trong-luong-day/"><span aria-hidden="true">📦</span>Tra cứu trọng lượng dây</a>
+          <a class="app-link" href="apps/tinh-dien-tro-1-chieu-mba/"><span aria-hidden="true">🔌</span>Tính điện trở 1 chiều MBA</a>
+          <!-- AUTO-APPS:END -->
         </div>
-    </div>
+      </section>
+    </main>
+    <footer>Made by Thành Nam</footer>
+  </div>
 
-    <div class="footer">
-        <p>Made by Thành Nam </p>
-    </div>
+  <dialog id="password-dialog">
+    <form class="modal-content" id="password-form" method="dialog">
+      <h2>Mở mục Cá nhân</h2>
+      <p>Nhập mật khẩu để mở bảng theo dõi thu chi.</p>
+      <label for="password">Mật khẩu</label>
+      <input id="password" name="password" type="password" inputmode="numeric" autocomplete="current-password" maxlength="1" required>
+      <p class="error" id="password-error" role="alert" aria-live="polite"></p>
+      <div class="modal-actions">
+        <button class="modal-button cancel" id="cancel-button" type="button">Hủy</button>
+        <button class="modal-button unlock" type="submit">Mở</button>
+      </div>
+    </form>
+  </dialog>
 
-    <!-- ===== Đăng ký Service Worker ===== -->
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js')
-                    .then((reg) => console.log('Service Worker đã đăng ký:', reg.scope))
-                    .catch((err) => console.log('Lỗi đăng ký Service Worker:', err));
-            });
-        }
-    </script>
+  <script>
+    const PERSONAL_URL = "personal/index.html";
+    const PASSWORD_HASH = "2c624232cdd221771294dfbb310aca000a0df6ac8b66b696d90ef06fdefb64a3";
+    const workButton = document.getElementById("work-button");
+    const workPanel = document.getElementById("work-panel");
+    const dialog = document.getElementById("password-dialog");
+    const form = document.getElementById("password-form");
+    const passwordInput = document.getElementById("password");
+    const passwordError = document.getElementById("password-error");
+
+    workButton.addEventListener("click", () => {
+      const isOpen = workPanel.classList.toggle("open");
+      workButton.setAttribute("aria-expanded", String(isOpen));
+      if (isOpen) workPanel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    });
+    document.getElementById("personal-button").addEventListener("click", () => {
+      passwordInput.value = ""; passwordError.textContent = ""; dialog.showModal();
+      window.setTimeout(() => passwordInput.focus(), 50);
+    });
+    document.getElementById("cancel-button").addEventListener("click", () => dialog.close());
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const data = new TextEncoder().encode(passwordInput.value);
+      const digest = await crypto.subtle.digest("SHA-256", data);
+      const hash = Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, "0")).join("");
+      if (hash === PASSWORD_HASH) window.location.href = PERSONAL_URL;
+      else { passwordError.textContent = "Mật khẩu chưa đúng. Anh thử lại nhé."; passwordInput.select(); }
+    });
+    if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+  </script>
 </body>
 </html>
