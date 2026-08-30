@@ -169,7 +169,15 @@
       catch (_) { error.textContent = "Điện thoại không lưu được mật khẩu mới."; return; }
       changeDialog.close(); passwordInput.value = ""; passwordError.textContent = "Đã đổi mật khẩu. Anh dùng mật khẩu mới để mở."; dialog.showModal();
     });
-    if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+    if ("serviceWorker" in navigator) {
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener("controllerchange", () => {
+        if (refreshing) return;
+        refreshing = true;
+        window.location.reload();
+      });
+      window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").then(registration => registration.update()).catch(() => {}));
+    }
   </script>
 </body>
 </html>
