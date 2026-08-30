@@ -1,4 +1,4 @@
-// Bản v5: gỡ bộ nhớ đệm PWA cũ để My Apps luôn lấy bản mới từ GitHub.
+// Bản v9: gỡ bộ nhớ đệm PWA cũ để My Apps luôn lấy bản mới từ GitHub.
 self.addEventListener('install', () => self.skipWaiting());
 
 self.addEventListener('activate', (event) => {
