@@ -52,7 +52,7 @@
       <div class="summary-card balance"><span class="summary-label">Còn lại</span><strong class="summary-value" id="summary-balance">—</strong></div>
     </section>
     <div class="summary-note" id="summary-note">Đang tải tổng hợp…</div>
-    <form id="entry-form" action="https://script.google.com/macros/s/AKfycbyh0OFsVLAkcPqrvpfFPIcFrgXDvze2xc06om5U7kTJp5obb6LDOVlfNrWHnGrBwoZS/exec">
+    <form id="entry-form">
       <div class="date-field"><label for="date">Ngày</label><input id="date" name="date" type="date" required></div>
       <section class="entry income">
         <h2>💵 Khoản thu</h2>
@@ -74,107 +74,70 @@
     <div class="sheet-link"><a href="https://docs.google.com/spreadsheets/d/1HOON5oFW0Lrx9PE8C96l3U_TcuYEVdxhtJ7ngr0Tfuw/edit" target="_blank" rel="noopener">📊 Mở Google Sheets để xem chi tiết</a></div>
   </main>
   <script>
-    const form = document.getElementById("entry-form");
-    const status = document.getElementById("status");
-    const submitButton = document.getElementById("submit-button");
-    const dateInput = document.getElementById("date");
-    const scriptUrl = form.action;
-    const isConnected = form.getAttribute("action") !== "__APPS_SCRIPT_URL__";
-    const now = new Date();
+    var WORKER_URL = "https://my-apps-proxy.namxt86gpt.workers.dev";
+    var form = document.getElementById("entry-form");
+    var status = document.getElementById("status");
+    var submitButton = document.getElementById("submit-button");
+    var dateInput = document.getElementById("date");
+    var summaryNote = document.getElementById("summary-note");
+    var isConnected = true;
+
+    var now = new Date();
     dateInput.value = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
 
-    function loadSummary() {
-      if (!isConnected) {
-        document.getElementById("summary-note").textContent = "Chưa kết nối Google Sheets.";
-        return;
-      }
-      document.getElementById("summary-note").textContent = "Đang tải tổng hợp…";
-      sendRequest({ date: dateInput.value });
-    }
+    function formatAmount(value) { return new Intl.NumberFormat("vi-VN").format(Number(value) || 0) + " nghìn"; }
 
-    function sendRequest(params) {
-      const url = new URL(scriptUrl);
-      Object.entries(params).forEach(([key, value]) => url.searchParams.set(key, value));
-      const requestId = String(Date.now()) + Math.random().toString(36).slice(2);
-      url.searchParams.set("transport", "frame");
-      url.searchParams.set("requestId", requestId);
+    function callWorker(params) {
+      var url = new URL(WORKER_URL);
+      var keys = Object.keys(params);
+      for (var i = 0; i < keys.length; i++) url.searchParams.set(keys[i], params[keys[i]]);
       url.searchParams.set("_", Date.now());
-      const frame = document.createElement("iframe");
-      frame.hidden = true;
-      frame.setAttribute("aria-hidden", "true");
-      frame.dataset.requestId = requestId;
-      frame.src = url.toString();
-      document.body.appendChild(frame);
-      window.setTimeout(() => {
-        if (!frame.isConnected) return;
-        frame.remove();
-        if (params.action === "write" && submitButton.disabled) {
-          submitButton.disabled = false;
-          submitButton.textContent = "Ghi vào Google Sheets";
-          status.className = "status error";
-          status.textContent = "Google Sheets chưa phản hồi. Anh thử gửi lại.";
-        } else if (!params.action) {
-          document.getElementById("summary-note").textContent = "Không tải được tổng hợp tháng.";
-        }
-      }, 20000);
+      return fetch(url.toString()).then(function(r) { if (!r.ok) throw new Error(); return r.json(); });
     }
 
-    function formatAmount(value) {
-      return new Intl.NumberFormat("vi-VN").format(Number(value) || 0) + " nghìn";
+    function loadSummary() {
+      summaryNote.textContent = "Đang tải tổng hợp…";
+      callWorker({ date: dateInput.value })
+        .then(function(data) {
+          if (!data) return;
+          if (data.success) {
+            document.getElementById("summary-income").textContent = formatAmount(data.income);
+            document.getElementById("summary-expense").textContent = formatAmount(data.expense);
+            document.getElementById("summary-balance").textContent = formatAmount(data.balance);
+            summaryNote.textContent = "Số liệu trực tiếp từ hai dòng Tổng và Còn lại của " + data.month;
+          } else summaryNote.textContent = data.message || "Không tải được tổng hợp.";
+        })
+        .catch(function() { summaryNote.textContent = "Không tải được tổng hợp tháng."; });
     }
 
     dateInput.addEventListener("change", loadSummary);
 
-    form.addEventListener("submit", event => {
+    form.addEventListener("submit", function(event) {
       event.preventDefault();
-      if (!isConnected) {
-        status.className = "status error"; status.textContent = "Chưa kết nối Google Sheets."; return;
-      }
-      const incomeAmount = Number(form.incomeAmount.value || 0);
-      const expenseAmount = Number(form.expenseAmount.value || 0);
-      if (!incomeAmount && !expenseAmount) {
-        status.className = "status error"; status.textContent = "Anh nhập ít nhất một khoản thu hoặc chi nhé."; return;
-      }
-      if (incomeAmount && !form.incomeNote.value.trim()) {
-        status.className = "status error"; status.textContent = "Anh chưa nhập nội dung khoản thu."; return;
-      }
-      if (expenseAmount && !form.expenseNote.value.trim()) {
-        status.className = "status error"; status.textContent = "Anh chưa nhập nội dung khoản chi."; return;
-      }
+      var incomeAmount = Number(form.incomeAmount.value || 0);
+      var expenseAmount = Number(form.expenseAmount.value || 0);
+      if (!incomeAmount && !expenseAmount) { status.className = "status error"; status.textContent = "Anh nhập ít nhất một khoản thu hoặc chi nhé."; return; }
+      if (incomeAmount && !form.incomeNote.value.trim()) { status.className = "status error"; status.textContent = "Anh chưa nhập nội dung khoản thu."; return; }
+      if (expenseAmount && !form.expenseNote.value.trim()) { status.className = "status error"; status.textContent = "Anh chưa nhập nội dung khoản chi."; return; }
+
       submitButton.disabled = true; submitButton.textContent = "Đang ghi dữ liệu…"; status.className = "status"; status.textContent = "";
-      sendRequest({ action: "write", date: dateInput.value, incomeNote: form.incomeNote.value, incomeAmount, expenseNote: form.expenseNote.value, expenseAmount });
-      window.setTimeout(() => { if (submitButton.disabled) { submitButton.disabled = false; submitButton.textContent = "Ghi vào Google Sheets"; status.className = "status error"; status.textContent = "Google Sheets chưa phản hồi. Anh thử gửi lại."; } }, 15000);
+
+      callWorker({ action: "write", date: dateInput.value, incomeAmount: incomeAmount, incomeNote: form.incomeNote.value, expenseAmount: expenseAmount, expenseNote: form.expenseNote.value })
+        .then(function(data) {
+          submitButton.disabled = false; submitButton.textContent = "Ghi vào Google Sheets";
+          if (!data) return;
+          status.className = data.success ? "status ok" : "status error"; status.textContent = data.message;
+          if (data.success) { form.incomeNote.value = ""; form.incomeAmount.value = ""; form.expenseNote.value = ""; form.expenseAmount.value = ""; loadSummary(); }
+        })
+        .catch(function() {
+          submitButton.disabled = false; submitButton.textContent = "Ghi vào Google Sheets";
+          status.className = "status error"; status.textContent = "Lỗi kết nối. Anh thử gửi lại.";
+        });
     });
 
-    window.expenseAppCallback = data => {
-      if (!data) return;
-      if (data.type === "expense-summary-result") {
-        if (data.success) {
-          document.getElementById("summary-income").textContent = formatAmount(data.income);
-          document.getElementById("summary-expense").textContent = formatAmount(data.expense);
-          document.getElementById("summary-balance").textContent = formatAmount(data.balance);
-          document.getElementById("summary-note").textContent = "Số liệu trực tiếp từ hai dòng Tổng và Còn lại của " + data.month;
-        } else document.getElementById("summary-note").textContent = data.message;
-        return;
-      }
-      if (data.type !== "expense-app-result") return;
-      submitButton.disabled = false; submitButton.textContent = "Ghi vào Google Sheets";
-      status.className = data.success ? "status ok" : "status error"; status.textContent = data.message;
-      if (data.success) { form.incomeNote.value = ""; form.incomeAmount.value = ""; form.expenseNote.value = ""; form.expenseAmount.value = ""; loadSummary(); }
-    };
-    window.addEventListener("message", event => {
-      let host = "";
-      try { host = new URL(event.origin).hostname; } catch (_) {}
-      const allowed = event.origin === "https://script.google.com" || host.endsWith(".googleusercontent.com");
-      if (!allowed || !event.data || !event.data.type) return;
-      if (event.data.requestId) {
-        const frame = Array.from(document.querySelectorAll("iframe[data-request-id]")).find(item => item.dataset.requestId === String(event.data.requestId));
-        if (frame) frame.remove();
-      }
-      window.expenseAppCallback(event.data);
-    });
-    if ("serviceWorker" in navigator) navigator.serviceWorker.getRegistrations().then(items => Promise.all(items.map(item => item.unregister()))).catch(() => {});
-    if ("caches" in window) caches.keys().then(keys => Promise.all(keys.map(key => caches.delete(key)))).catch(() => {});
+    if ("serviceWorker" in navigator) navigator.serviceWorker.getRegistrations().then(function(items) { return Promise.all(items.map(function(r) { return r.unregister(); })); }).catch(function() {});
+    if ("caches" in window) caches.keys().then(function(keys) { return Promise.all(keys.map(function(k) { return caches.delete(k); })); }).catch(function() {});
+
     loadSummary();
   </script>
 </body>
