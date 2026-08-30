@@ -47,6 +47,8 @@
     .modal-button { min-height: 50px; border: 0; border-radius: 14px; cursor: pointer; font-weight: 700; }
     .cancel { background: #eeeef5; color: #515365; }
     .unlock { background: #5f5bd3; color: #fff; }
+    .change-password { width: 100%; margin-top: 12px; padding: 8px; border: 0; background: transparent; color: #504bc2; cursor: pointer; font-weight: 700; }
+    .hint { margin: 8px 0 0 !important; font-size: .82rem; color: #77798c !important; }
     @media (max-width: 370px) { .choice-grid { gap: 11px; } .choice { min-height: 165px; padding-inline: 8px; } .choice-icon { font-size: 3rem; } .choice-title { font-size: 1rem; } .apps-grid { grid-template-columns: 1fr; } }
     @media (prefers-reduced-motion: reduce) { .choice { transition: none; } }
   </style>
@@ -82,24 +84,57 @@
       <h2>Mở mục Cá nhân</h2>
       <p>Nhập mật khẩu để mở bảng theo dõi thu chi.</p>
       <label for="password">Mật khẩu</label>
-      <input id="password" name="password" type="password" inputmode="numeric" autocomplete="current-password" maxlength="1" required>
+      <input id="password" name="password" type="password" autocomplete="current-password" maxlength="64" required>
       <p class="error" id="password-error" role="alert" aria-live="polite"></p>
       <div class="modal-actions">
         <button class="modal-button cancel" id="cancel-button" type="button">Hủy</button>
         <button class="modal-button unlock" type="submit">Mở</button>
+      </div>
+      <button class="change-password" id="change-password-button" type="button">Đổi mật khẩu</button>
+    </form>
+  </dialog>
+
+  <dialog id="change-password-dialog">
+    <form class="modal-content" id="change-password-form">
+      <h2>Đổi mật khẩu cá nhân</h2>
+      <label for="current-password">Mật khẩu hiện tại</label>
+      <input id="current-password" type="password" autocomplete="current-password" maxlength="64" required>
+      <label for="new-password" style="margin-top:14px">Mật khẩu mới</label>
+      <input id="new-password" type="password" autocomplete="new-password" maxlength="64" required>
+      <label for="confirm-password" style="margin-top:14px">Nhập lại mật khẩu mới</label>
+      <input id="confirm-password" type="password" autocomplete="new-password" maxlength="64" required>
+      <p class="hint">Mật khẩu có thể gồm chữ hoặc số.</p>
+      <p class="error" id="change-password-error" role="alert" aria-live="polite"></p>
+      <div class="modal-actions">
+        <button class="modal-button cancel" id="cancel-change-password" type="button">Hủy</button>
+        <button class="modal-button unlock" type="submit">Lưu mật khẩu</button>
       </div>
     </form>
   </dialog>
 
   <script>
     const PERSONAL_URL = "personal/index.html";
-    const PASSWORD_HASH = "2c624232cdd221771294dfbb310aca000a0df6ac8b66b696d90ef06fdefb64a3";
+    const DEFAULT_PASSWORD_HASH = "2c624232cdd221771294dfbb310aca000a0df6ac8b66b696d90ef06fdefb64a3";
+    const PASSWORD_STORAGE_KEY = "my-apps-personal-password-hash";
     const workButton = document.getElementById("work-button");
     const workPanel = document.getElementById("work-panel");
     const dialog = document.getElementById("password-dialog");
     const form = document.getElementById("password-form");
     const passwordInput = document.getElementById("password");
     const passwordError = document.getElementById("password-error");
+    const changeDialog = document.getElementById("change-password-dialog");
+    const changeForm = document.getElementById("change-password-form");
+
+    async function hashPassword(value) {
+      const data = new TextEncoder().encode(value);
+      const digest = await crypto.subtle.digest("SHA-256", data);
+      return Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, "0")).join("");
+    }
+
+    function getPasswordHash() {
+      try { return localStorage.getItem(PASSWORD_STORAGE_KEY) || DEFAULT_PASSWORD_HASH; }
+      catch (_) { return DEFAULT_PASSWORD_HASH; }
+    }
 
     workButton.addEventListener("click", () => {
       const isOpen = workPanel.classList.toggle("open");
@@ -113,11 +148,26 @@
     document.getElementById("cancel-button").addEventListener("click", () => dialog.close());
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
-      const data = new TextEncoder().encode(passwordInput.value);
-      const digest = await crypto.subtle.digest("SHA-256", data);
-      const hash = Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, "0")).join("");
-      if (hash === PASSWORD_HASH) window.location.href = PERSONAL_URL;
+      const hash = await hashPassword(passwordInput.value);
+      if (hash === getPasswordHash()) window.location.href = PERSONAL_URL;
       else { passwordError.textContent = "Mật khẩu chưa đúng. Anh thử lại nhé."; passwordInput.select(); }
+    });
+    document.getElementById("change-password-button").addEventListener("click", () => {
+      dialog.close(); changeForm.reset(); document.getElementById("change-password-error").textContent = ""; changeDialog.showModal();
+    });
+    document.getElementById("cancel-change-password").addEventListener("click", () => changeDialog.close());
+    changeForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const error = document.getElementById("change-password-error");
+      const current = document.getElementById("current-password").value;
+      const next = document.getElementById("new-password").value;
+      const confirm = document.getElementById("confirm-password").value;
+      if (await hashPassword(current) !== getPasswordHash()) { error.textContent = "Mật khẩu hiện tại chưa đúng."; return; }
+      if (!next) { error.textContent = "Anh chưa nhập mật khẩu mới."; return; }
+      if (next !== confirm) { error.textContent = "Hai lần nhập mật khẩu mới chưa giống nhau."; return; }
+      try { localStorage.setItem(PASSWORD_STORAGE_KEY, await hashPassword(next)); }
+      catch (_) { error.textContent = "Điện thoại không lưu được mật khẩu mới."; return; }
+      changeDialog.close(); passwordInput.value = ""; passwordError.textContent = "Đã đổi mật khẩu. Anh dùng mật khẩu mới để mở."; dialog.showModal();
     });
     if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
   </script>
