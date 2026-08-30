@@ -40,7 +40,6 @@
     .status.ok { color: #087443; } .status.error { color: #b42318; }
     .sheet-link { margin-top: 16px; padding: 14px; }
     .sheet-link a { min-height: 52px; display: flex; align-items: center; justify-content: center; gap: 9px; border-radius: 14px; background: #eef2ff; color: #3730a3; text-decoration: none; font-weight: 750; }
-    iframe { position: fixed; left: -10000px; top: 0; width: 1px; height: 1px; border: 0; opacity: 0; pointer-events: none; }
     @media (max-width: 430px) { .entry-grid { grid-template-columns: 1fr; } .summary { gap: 7px; } .summary-card { padding-inline: 4px; } }
   </style>
 </head>
@@ -53,7 +52,7 @@
       <div class="summary-card balance"><span class="summary-label">Còn lại</span><strong class="summary-value" id="summary-balance">—</strong></div>
     </section>
     <div class="summary-note" id="summary-note">Đang tải tổng hợp…</div>
-    <form id="entry-form" method="post" action="https://script.google.com/macros/s/AKfycbyh0OFsVLAkcPqrvpfFPIcFrgXDvze2xc06om5U7kTJp5obb6LDOVlfNrWHnGrBwoZS/exec" target="submit-frame">
+    <form id="entry-form" action="https://script.google.com/macros/s/AKfycbyh0OFsVLAkcPqrvpfFPIcFrgXDvze2xc06om5U7kTJp5obb6LDOVlfNrWHnGrBwoZS/exec">
       <div class="date-field"><label for="date">Ngày</label><input id="date" name="date" type="date" required></div>
       <section class="entry income">
         <h2>💵 Khoản thu</h2>
@@ -73,15 +72,12 @@
       <div class="status" id="status" role="status" aria-live="polite"></div>
     </form>
     <div class="sheet-link"><a href="https://docs.google.com/spreadsheets/d/1HOON5oFW0Lrx9PE8C96l3U_TcuYEVdxhtJ7ngr0Tfuw/edit" target="_blank" rel="noopener">📊 Mở Google Sheets để xem chi tiết</a></div>
-    <iframe name="submit-frame" title="Gửi dữ liệu"></iframe>
-    <iframe id="summary-frame" title="Tải tổng hợp"></iframe>
   </main>
   <script>
     const form = document.getElementById("entry-form");
     const status = document.getElementById("status");
     const submitButton = document.getElementById("submit-button");
     const dateInput = document.getElementById("date");
-    const summaryFrame = document.getElementById("summary-frame");
     const scriptUrl = form.action;
     const isConnected = form.getAttribute("action") !== "__APPS_SCRIPT_URL__";
     const now = new Date();
@@ -93,7 +89,26 @@
         return;
       }
       document.getElementById("summary-note").textContent = "Đang tải tổng hợp…";
-      summaryFrame.src = scriptUrl + "?date=" + encodeURIComponent(dateInput.value) + "&t=" + Date.now();
+      sendRequest({ date: dateInput.value });
+    }
+
+    function sendRequest(params) {
+      const url = new URL(scriptUrl);
+      Object.entries(params).forEach(([key, value]) => url.searchParams.set(key, value));
+      url.searchParams.set("callback", "expenseAppCallback");
+      url.searchParams.set("_", Date.now());
+      const request = document.createElement("script");
+      request.src = url.toString();
+      request.async = true;
+      request.onload = () => request.remove();
+      request.onerror = () => {
+        request.remove();
+        if (params.action === "write") {
+          submitButton.disabled = false; submitButton.textContent = "Ghi vào Google Sheets";
+          status.className = "status error"; status.textContent = "Không kết nối được Google Sheets. Anh thử lại nhé.";
+        } else document.getElementById("summary-note").textContent = "Không tải được tổng hợp tháng.";
+      };
+      document.head.appendChild(request);
     }
 
     function formatAmount(value) {
@@ -103,26 +118,27 @@
     dateInput.addEventListener("change", loadSummary);
 
     form.addEventListener("submit", event => {
+      event.preventDefault();
       if (!isConnected) {
-        event.preventDefault(); status.className = "status error"; status.textContent = "Chưa kết nối Google Sheets. Cần hoàn tất đăng nhập Google."; return;
+        status.className = "status error"; status.textContent = "Chưa kết nối Google Sheets."; return;
       }
       const incomeAmount = Number(form.incomeAmount.value || 0);
       const expenseAmount = Number(form.expenseAmount.value || 0);
       if (!incomeAmount && !expenseAmount) {
-        event.preventDefault(); status.className = "status error"; status.textContent = "Anh nhập ít nhất một khoản thu hoặc chi nhé."; return;
+        status.className = "status error"; status.textContent = "Anh nhập ít nhất một khoản thu hoặc chi nhé."; return;
       }
       if (incomeAmount && !form.incomeNote.value.trim()) {
-        event.preventDefault(); status.className = "status error"; status.textContent = "Anh chưa nhập nội dung khoản thu."; return;
+        status.className = "status error"; status.textContent = "Anh chưa nhập nội dung khoản thu."; return;
       }
       if (expenseAmount && !form.expenseNote.value.trim()) {
-        event.preventDefault(); status.className = "status error"; status.textContent = "Anh chưa nhập nội dung khoản chi."; return;
+        status.className = "status error"; status.textContent = "Anh chưa nhập nội dung khoản chi."; return;
       }
       submitButton.disabled = true; submitButton.textContent = "Đang ghi dữ liệu…"; status.className = "status"; status.textContent = "";
+      sendRequest({ action: "write", date: dateInput.value, incomeNote: form.incomeNote.value, incomeAmount, expenseNote: form.expenseNote.value, expenseAmount });
       window.setTimeout(() => { if (submitButton.disabled) { submitButton.disabled = false; submitButton.textContent = "Ghi vào Google Sheets"; status.className = "status error"; status.textContent = "Google Sheets chưa phản hồi. Anh thử gửi lại."; } }, 15000);
     });
 
-    window.addEventListener("message", event => {
-      const data = event.data;
+    window.expenseAppCallback = data => {
       if (!data) return;
       if (data.type === "expense-summary-result") {
         if (data.success) {
@@ -137,7 +153,7 @@
       submitButton.disabled = false; submitButton.textContent = "Ghi vào Google Sheets";
       status.className = data.success ? "status ok" : "status error"; status.textContent = data.message;
       if (data.success) { form.incomeNote.value = ""; form.incomeAmount.value = ""; form.expenseNote.value = ""; form.expenseAmount.value = ""; loadSummary(); }
-    });
+    };
     loadSummary();
   </script>
 </body>
