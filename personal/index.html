@@ -95,24 +95,28 @@
     function sendRequest(params) {
       const url = new URL(scriptUrl);
       Object.entries(params).forEach(([key, value]) => url.searchParams.set(key, value));
-      url.searchParams.set("callback", "expenseAppCallback");
+      const requestId = String(Date.now()) + Math.random().toString(36).slice(2);
+      url.searchParams.set("transport", "frame");
+      url.searchParams.set("requestId", requestId);
       url.searchParams.set("_", Date.now());
-      const request = document.createElement("script");
-      request.src = url.toString();
-      request.async = true;
-      request.onload = () => request.remove();
-      request.onerror = () => {
-        request.remove();
-        if (params.action === "write") {
+      const frame = document.createElement("iframe");
+      frame.hidden = true;
+      frame.setAttribute("aria-hidden", "true");
+      frame.dataset.requestId = requestId;
+      frame.src = url.toString();
+      document.body.appendChild(frame);
+      window.setTimeout(() => {
+        if (!frame.isConnected) return;
+        frame.remove();
+        if (params.action === "write" && submitButton.disabled) {
           submitButton.disabled = false;
           submitButton.textContent = "Ghi vào Google Sheets";
           status.className = "status error";
-          status.textContent = "Không kết nối được Google Sheets. Anh thử lại nhé.";
-        } else {
+          status.textContent = "Google Sheets chưa phản hồi. Anh thử gửi lại.";
+        } else if (!params.action) {
           document.getElementById("summary-note").textContent = "Không tải được tổng hợp tháng.";
         }
-      };
-      document.head.appendChild(request);
+      }, 20000);
     }
 
     function formatAmount(value) {
@@ -158,10 +162,20 @@
       status.className = data.success ? "status ok" : "status error"; status.textContent = data.message;
       if (data.success) { form.incomeNote.value = ""; form.incomeAmount.value = ""; form.expenseNote.value = ""; form.expenseAmount.value = ""; loadSummary(); }
     };
+    window.addEventListener("message", event => {
+      let host = "";
+      try { host = new URL(event.origin).hostname; } catch (_) {}
+      const allowed = event.origin === "https://script.google.com" || host.endsWith(".googleusercontent.com");
+      if (!allowed || !event.data || !event.data.type) return;
+      if (event.data.requestId) {
+        const frame = Array.from(document.querySelectorAll("iframe[data-request-id]")).find(item => item.dataset.requestId === String(event.data.requestId));
+        if (frame) frame.remove();
+      }
+      window.expenseAppCallback(event.data);
+    });
     if ("serviceWorker" in navigator) navigator.serviceWorker.getRegistrations().then(items => Promise.all(items.map(item => item.unregister()))).catch(() => {});
     if ("caches" in window) caches.keys().then(keys => Promise.all(keys.map(key => caches.delete(key)))).catch(() => {});
     loadSummary();
   </script>
 </body>
 </html>
-
