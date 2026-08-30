@@ -1,25 +1,16 @@
 {
   "name": "My Apps - Thành Nam",
   "short_name": "My Apps",
-  "description": "Bộ công cụ cá nhân: GPS, Tính toán kỹ thuật, Tool KHKT",
-  "start_url": "./index.html",
+  "description": "Bộ công cụ công việc và cá nhân của Thành Nam",
+  "id": "/my-apps/",
+  "start_url": "./index.html?app=v5",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#667eea",
   "theme_color": "#667eea",
   "icons": [
-    {
-      "src": "icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    }
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
   ]
 }
