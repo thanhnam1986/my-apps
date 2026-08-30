@@ -113,7 +113,7 @@
   </dialog>
 
   <script>
-    const PERSONAL_URL = "personal/index.html";
+    const PERSONAL_URL = "https://script.google.com/macros/s/AKfycbyh0OFsVLAkcPqrvpfFPIcFrgXDvze2xc06om5U7kTJp5obb6LDOVlfNrWHnGrBwoZS/exec?app=1";
     const DEFAULT_PASSWORD_HASH = "2c624232cdd221771294dfbb310aca000a0df6ac8b66b696d90ef06fdefb64a3";
     const PASSWORD_STORAGE_KEY = "my-apps-personal-password-hash";
     const workButton = document.getElementById("work-button");
@@ -169,15 +169,8 @@
       catch (_) { error.textContent = "Điện thoại không lưu được mật khẩu mới."; return; }
       changeDialog.close(); passwordInput.value = ""; passwordError.textContent = "Đã đổi mật khẩu. Anh dùng mật khẩu mới để mở."; dialog.showModal();
     });
-    if ("serviceWorker" in navigator) {
-      let refreshing = false;
-      navigator.serviceWorker.addEventListener("controllerchange", () => {
-        if (refreshing) return;
-        refreshing = true;
-        window.location.reload();
-      });
-      window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").then(registration => registration.update()).catch(() => {}));
-    }
+    if ("serviceWorker" in navigator) navigator.serviceWorker.getRegistrations().then(items => Promise.all(items.map(item => item.unregister()))).catch(() => {});
+    if ("caches" in window) caches.keys().then(keys => Promise.all(keys.map(key => caches.delete(key)))).catch(() => {});
   </script>
 </body>
 </html>
