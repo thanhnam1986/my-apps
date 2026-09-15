@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#5b5bd6">
-  <meta name="description" content="My Apps của Thành Nam - Công việc và Cá nhân">
+  <meta name="description" content="My Apps của Thành Nam - Công việc">
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="icon-192.png">
   <link rel="apple-touch-icon" href="icon-192.png">
@@ -20,10 +20,10 @@
     header { padding: 14px 0 30px; text-align: center; color: #fff; }
     h1 { margin: 0 0 8px; font-size: clamp(1.8rem, 8vw, 2.5rem); letter-spacing: -0.035em; text-shadow: 0 3px 14px rgba(31, 28, 80, 0.22); }
     header p { margin: 0; opacity: 0.9; }
-    .choice-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    .choice-grid { display: grid; grid-template-columns: 1fr; gap: 16px; width: 100%; }
     button, a { font: inherit; }
-    .choice { min-height: 190px; padding: 22px 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; border: 0; border-radius: 24px; background: rgba(255,255,255,.97); color: #282a44; cursor: pointer; box-shadow: 0 14px 36px rgba(31,28,80,.22); transition: transform .16s ease; touch-action: manipulation; }
-    .choice:active { transform: scale(.97); }
+    .choice { min-height: 170px; padding: 22px 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; border: 0; border-radius: 24px; background: rgba(255,255,255,.97); color: #282a44; cursor: pointer; box-shadow: 0 14px 36px rgba(31,28,80,.22); transition: transform .16s ease; touch-action: manipulation; width: 100%; }
+    .choice:active { transform: scale(.98); }
     .choice-icon { font-size: 3.5rem; line-height: 1; }
     .choice-title { font-size: 1.15rem; font-weight: 750; }
     .choice-note { color: #77798c; font-size: .82rem; }
@@ -34,22 +34,7 @@
     .app-link { min-height: 112px; padding: 14px 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; border: 1px solid #ececf5; border-radius: 18px; color: #292b42; background: #f8f8fe; text-align: center; text-decoration: none; font-size: .9rem; font-weight: 650; }
     .app-link span { font-size: 1.9rem; }
     footer { margin-top: auto; padding: 28px 0 4px; text-align: center; color: rgba(255,255,255,.86); font-size: .85rem; }
-    dialog { width: min(calc(100% - 36px), 390px); padding: 0; border: 0; border-radius: 24px; color: #25273d; box-shadow: 0 24px 70px rgba(26,23,70,.35); }
-    dialog::backdrop { background: rgba(25,23,63,.62); backdrop-filter: blur(4px); }
-    .modal-content { padding: 26px 22px 22px; }
-    .modal-content h2 { margin: 0 0 8px; }
-    .modal-content p { margin: 0 0 18px; color: #66687a; line-height: 1.45; }
-    label { display: block; margin-bottom: 7px; font-size: .9rem; font-weight: 650; }
-    input { width: 100%; min-height: 52px; padding: 12px 14px; border: 2px solid #dedfeb; border-radius: 14px; font-size: 1.05rem; outline: none; }
-    input:focus { border-color: #6865d8; box-shadow: 0 0 0 4px rgba(104,101,216,.13); }
-    .error { min-height: 20px; margin: 8px 0 0 !important; color: #c62828 !important; font-size: .86rem; }
-    .modal-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
-    .modal-button { min-height: 50px; border: 0; border-radius: 14px; cursor: pointer; font-weight: 700; }
-    .cancel { background: #eeeef5; color: #515365; }
-    .unlock { background: #5f5bd3; color: #fff; }
-    .change-password { width: 100%; margin-top: 12px; padding: 8px; border: 0; background: transparent; color: #504bc2; cursor: pointer; font-weight: 700; }
-    .hint { margin: 8px 0 0 !important; font-size: .82rem; color: #77798c !important; }
-    @media (max-width: 370px) { .choice-grid { gap: 11px; } .choice { min-height: 165px; padding-inline: 8px; } .choice-icon { font-size: 3rem; } .choice-title { font-size: 1rem; } .apps-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 370px) { .choice { min-height: 155px; padding-inline: 8px; } .choice-icon { font-size: 3rem; } .choice-title { font-size: 1rem; } .apps-grid { grid-template-columns: 1fr; } }
     @media (prefers-reduced-motion: reduce) { .choice { transition: none; } }
   </style>
 </head>
@@ -60,9 +45,6 @@
       <div class="choice-grid">
         <button class="choice" id="work-button" type="button" aria-expanded="false" aria-controls="work-panel">
           <span class="choice-icon" aria-hidden="true">🧰</span><span class="choice-title">Công việc</span><span class="choice-note">4 tiện ích</span>
-        </button>
-        <button class="choice" id="personal-button" type="button">
-          <span class="choice-icon" aria-hidden="true">🔐</span><span class="choice-title">Cá nhân</span><span class="choice-note">Có mật khẩu</span>
         </button>
       </div>
       <section class="work-panel" id="work-panel" aria-label="Ứng dụng công việc">
@@ -79,95 +61,14 @@
     <footer>Made by Thành Nam</footer>
   </div>
 
-  <dialog id="password-dialog">
-    <form class="modal-content" id="password-form" method="dialog">
-      <h2>Mở mục Cá nhân</h2>
-      <p>Nhập mật khẩu để mở bảng theo dõi thu chi.</p>
-      <label for="password">Mật khẩu</label>
-      <input id="password" name="password" type="password" autocomplete="current-password" maxlength="64" required>
-      <p class="error" id="password-error" role="alert" aria-live="polite"></p>
-      <div class="modal-actions">
-        <button class="modal-button cancel" id="cancel-button" type="button">Hủy</button>
-        <button class="modal-button unlock" type="submit">Mở</button>
-      </div>
-      <button class="change-password" id="change-password-button" type="button">Đổi mật khẩu</button>
-    </form>
-  </dialog>
-
-  <dialog id="change-password-dialog">
-    <form class="modal-content" id="change-password-form">
-      <h2>Đổi mật khẩu cá nhân</h2>
-      <label for="current-password">Mật khẩu hiện tại</label>
-      <input id="current-password" type="password" autocomplete="current-password" maxlength="64" required>
-      <label for="new-password" style="margin-top:14px">Mật khẩu mới</label>
-      <input id="new-password" type="password" autocomplete="new-password" maxlength="64" required>
-      <label for="confirm-password" style="margin-top:14px">Nhập lại mật khẩu mới</label>
-      <input id="confirm-password" type="password" autocomplete="new-password" maxlength="64" required>
-      <p class="hint">Mật khẩu có thể gồm chữ hoặc số.</p>
-      <p class="error" id="change-password-error" role="alert" aria-live="polite"></p>
-      <div class="modal-actions">
-        <button class="modal-button cancel" id="cancel-change-password" type="button">Hủy</button>
-        <button class="modal-button unlock" type="submit">Lưu mật khẩu</button>
-      </div>
-    </form>
-  </dialog>
-
   <script>
-    const PERSONAL_URL = "./personal/index.html?app=v8";
-    const DEFAULT_PASSWORD_HASH = "2c624232cdd221771294dfbb310aca000a0df6ac8b66b696d90ef06fdefb64a3";
-    const PASSWORD_STORAGE_KEY = "my-apps-personal-password-hash";
     const workButton = document.getElementById("work-button");
     const workPanel = document.getElementById("work-panel");
-    const dialog = document.getElementById("password-dialog");
-    const form = document.getElementById("password-form");
-    const passwordInput = document.getElementById("password");
-    const passwordError = document.getElementById("password-error");
-    const changeDialog = document.getElementById("change-password-dialog");
-    const changeForm = document.getElementById("change-password-form");
-
-    async function hashPassword(value) {
-      const data = new TextEncoder().encode(value);
-      const digest = await crypto.subtle.digest("SHA-256", data);
-      return Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, "0")).join("");
-    }
-
-    function getPasswordHash() {
-      try { return localStorage.getItem(PASSWORD_STORAGE_KEY) || DEFAULT_PASSWORD_HASH; }
-      catch (_) { return DEFAULT_PASSWORD_HASH; }
-    }
 
     workButton.addEventListener("click", () => {
       const isOpen = workPanel.classList.toggle("open");
       workButton.setAttribute("aria-expanded", String(isOpen));
       if (isOpen) workPanel.scrollIntoView({ behavior: "smooth", block: "nearest" });
-    });
-    document.getElementById("personal-button").addEventListener("click", () => {
-      passwordInput.value = ""; passwordError.textContent = ""; dialog.showModal();
-      window.setTimeout(() => passwordInput.focus(), 50);
-    });
-    document.getElementById("cancel-button").addEventListener("click", () => dialog.close());
-    form.addEventListener("submit", async (event) => {
-      event.preventDefault();
-      const hash = await hashPassword(passwordInput.value);
-      if (hash === getPasswordHash()) window.location.href = PERSONAL_URL;
-      else { passwordError.textContent = "Mật khẩu chưa đúng. Anh thử lại nhé."; passwordInput.select(); }
-    });
-    document.getElementById("change-password-button").addEventListener("click", () => {
-      dialog.close(); changeForm.reset(); document.getElementById("change-password-error").textContent = ""; changeDialog.showModal();
-    });
-    document.getElementById("cancel-change-password").addEventListener("click", () => changeDialog.close());
-    changeForm.addEventListener("submit", async (event) => {
-      event.preventDefault();
-      const error = document.getElementById("change-password-error");
-      const current = document.getElementById("current-password").value;
-      const next = document.getElementById("new-password").value;
-      const confirm = document.getElementById("confirm-password").value;
-      if (await hashPassword(current) !== getPasswordHash()) { error.textContent = "Mật khẩu hiện tại chưa đúng."; return; }
-      if (!next) { error.textContent = "Anh chưa nhập mật khẩu mới."; return; }
-      if (next !== confirm) { error.textContent = "Hai lần nhập mật khẩu mới chưa giống nhau."; return; }
-      try { localStorage.setItem(PASSWORD_STORAGE_KEY, await hashPassword(next)); }
-      catch (_) { error.textContent = "Điện thoại không lưu được mật khẩu mới."; return; }
-      changeDialog.close(); passwordInput.value = ""; passwordError.textContent = "Đã đổi mật khẩu. Anh dùng mật khẩu mới để mở."; dialog.showModal();
     });
     if ("serviceWorker" in navigator) navigator.serviceWorker.getRegistrations().then(items => Promise.all(items.map(item => item.unregister()))).catch(() => {});
     if ("caches" in window) caches.keys().then(keys => Promise.all(keys.map(key => caches.delete(key)))).catch(() => {});
