@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b1120">
+  <meta name="description" content="Khảo sát hiện trường KHKT - Điện lực Nam Trực">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="../../icon-192.png">
+  <link rel="apple-touch-icon" href="../../icon-192.png">
+  <title>Khảo sát hiện trường KHKT</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Top Navbar -->
+  <header class="top-nav">
+    <a href="../../index.html" class="nav-back-link" title="Về danh sách My Apps">
+      ← <span>My Apps</span>
+    </a>
+    <div class="nav-title">📹 Khảo sát KHKT</div>
+    <div class="nav-actions">
+      <button class="btn-icon" id="btn-open-settings" title="Cài đặt AI & Bộ nhớ">⚙️</button>
+    </div>
+  </header>
+
+  <main class="app-container">
+    <!-- VIEW 1: HOME -->
+    <section class="view-panel active" id="view-home">
+      <div class="hero-card">
+        <h1 class="hero-title">Khảo sát hiện trường</h1>
+        <p class="hero-sub">Mở camera sau → Quay hiện trường → Tự động trích xuất số liệu</p>
+        <button class="btn-record-main" id="btn-start-record-flow" type="button">
+          <span class="pulse-dot"></span>
+          <span>QUAY KHẢO SÁT</span>
+        </button>
+      </div>
+
+      <div class="guide-banner">
+        <b>💡 Quy trình 1 chạm ngoài hiện trường:</b>
+        <ul class="guide-steps">
+          <li><span>1.</span> Bấm <b>QUAY KHẢO SÁT</b> để mở camera sau & tự bật GPS.</li>
+          <li><span>2.</span> Di chuyển chậm quanh TBA/thiết bị, giữ yên camera khi quay biển thông số.</li>
+          <li><span>3.</span> Nói các ghi chú hư hỏng (tiếp địa đứt, cột nghiêng, FCO...).</li>
+          <li><span>4.</span> Bấm <b>KẾT THÚC</b> để nhận ngay phiếu khảo sát & xuất file.</li>
+        </ul>
+      </div>
+
+      <div class="section-head">
+        <h2>📂 Khảo sát đã thực hiện</h2>
+        <span class="survey-badge" id="survey-count-badge">0 bản ghi</span>
+      </div>
+
+      <div class="survey-list" id="survey-list-container">
+        <!-- Danh sách khảo sát được render bằng JS -->
+        <div class="empty-state">
+          <span>📋</span>
+          <p>Chưa có phiếu khảo sát nào.</p>
+          <p class="text-dim" style="font-size: 0.8rem; margin-top: 4px;">Bấm "QUAY KHẢO SÁT" ở trên để bắt đầu đợt mới.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 2: RECORD / CAMERA FULLSCREEN -->
+    <section class="view-panel" id="view-record">
+      <div class="camera-preview-box">
+        <video id="camera-video" playsinline autoplay muted></video>
+
+        <!-- Top HUD -->
+        <div class="camera-hud-top">
+          <div class="hud-pill" id="hud-gps">
+            <span class="gps-live-dot"></span>
+            <span id="hud-gps-text">Đang lấy GPS...</span>
+          </div>
+          <div class="hud-pill" id="hud-timer">
+            ⏱ <span id="hud-timer-text">00:00</span>
+          </div>
+          <div class="hud-pill" id="hud-frames">
+            📸 <span id="hud-frames-count">0</span> ảnh
+          </div>
+        </div>
+
+        <!-- Guide Banner Floating -->
+        <div class="camera-guide-floating">
+          Di chuyển chậm quanh thiết bị. Giữ camera ổn định khi quay biển thông số.
+        </div>
+
+        <!-- Live Voice Speech Bubble -->
+        <div class="live-voice-bubble" id="live-voice-bubble">
+          🎙 <span id="live-voice-text">Đang lắng nghe giọng nói...</span>
+        </div>
+
+        <!-- Bottom HUD Controls -->
+        <div class="camera-hud-bottom">
+          <button class="btn-hud-round" id="btn-cancel-recording" title="Hủy quay">✕</button>
+          <button class="btn-stop-recording" id="btn-stop-recording">
+            <span>⏹ KẾT THÚC KHẢO SÁT</span>
+          </button>
+          <button class="btn-hud-round" id="btn-toggle-torch" title="Bật/Tắt Flash">💡</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 3: PROCESSING -->
+    <section class="view-panel" id="view-processing">
+      <div class="spinner"></div>
+      <h2 style="font-size: 1.25rem; margin-bottom: 8px;">Đang xử lý khảo sát...</h2>
+      <p class="text-muted" style="font-size: 0.88rem;">Vui lòng đợi vài giây để hệ thống tối ưu khung hình</p>
+      <div class="process-steps">
+        <div class="process-step-item active" id="p-step-1">✓ Đã chụp và lọc khung hình sắc nét</div>
+        <div class="process-step-item active" id="p-step-2">✓ Đã định vị GPS & gán timestamp</div>
+        <div class="process-step-item active" id="p-step-3">⟳ Đang phân loại thiết bị & bóc tách số liệu...</div>
+      </div>
+    </section>
+
+    <!-- VIEW 4: RESULT (REVIEW & EDIT) -->
+    <section class="view-panel" id="view-result">
+      <div class="result-header-card">
+        <div class="useful-photos-badge" id="useful-photos-badge">
+          <span>✨</span>
+          <span id="useful-photos-text">Đã tìm thấy 18 ảnh khảo sát hữu ích.</span>
+        </div>
+
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+          <h2 style="font-size: 1.2rem; font-weight: 800;" id="result-title">TBA Chưa xác định</h2>
+          <button class="btn-edit-inline" id="btn-edit-title" title="Sửa tên trạm">✏️ Sửa</button>
+        </div>
+
+        <div class="survey-meta">
+          <div class="survey-meta-item">📍 <span id="res-gps">Đang cập nhật...</span></div>
+          <div class="survey-meta-item">⏱ <span id="res-time">Vừa xong</span></div>
+        </div>
+      </div>
+
+      <!-- Section: Máy biến áp -->
+      <div class="survey-card" style="margin-bottom: 14px;">
+        <div class="survey-card-header">
+          <span class="survey-card-title">⚡ Máy biến áp (MBA)</span>
+          <span class="survey-badge" id="ai-status-badge">Ngoại tuyến KHKT</span>
+        </div>
+        <table class="field-table" id="mba-table">
+          <tr>
+            <td class="field-label">Tên TBA</td>
+            <td class="field-value"><span id="val-tba">Chưa xác định</span> <span class="field-confidence" id="conf-tba"></span></td>
+            <td style="width: 38px; text-align: right;"><button class="btn-edit-inline" data-field="tba">✏️</button></td>
+          </tr>
+          <tr>
+            <td class="field-label">Công suất</td>
+            <td class="field-value"><span id="val-cap">Chưa xác định</span> <span class="field-confidence" id="conf-cap"></span></td>
+            <td style="text-align: right;"><button class="btn-edit-inline" data-field="cap">✏️</button></td>
+          </tr>
+          <tr>
+            <td class="field-label">Điện áp</td>
+            <td class="field-value"><span id="val-volt">Chưa xác định</span> <span class="field-confidence" id="conf-volt"></span></td>
+            <td style="text-align: right;"><button class="btn-edit-inline" data-field="volt">✏️</button></td>
+          </tr>
+          <tr>
+            <td class="field-label">Tổ đấu dây</td>
+            <td class="field-value"><span id="val-vec">Chưa xác định</span> <span class="field-confidence" id="conf-vec"></span></td>
+            <td style="text-align: right;"><button class="btn-edit-inline" data-field="vec">✏️</button></td>
+          </tr>
+          <tr>
+            <td class="field-label">Hãng SX</td>
+            <td class="field-value"><span id="val-mfg">Chưa xác định</span> <span class="field-confidence" id="conf-mfg"></span></td>
+            <td style="text-align: right;"><button class="btn-edit-inline" data-field="mfg">✏️</button></td>
+          </tr>
+          <tr>
+            <td class="field-label">Năm SX</td>
+            <td class="field-value"><span id="val-year">Chưa xác định</span> <span class="field-confidence" id="conf-year"></span></td>
+            <td style="text-align: right;"><button class="btn-edit-inline" data-field="year">✏️</button></td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- Section: Thiết bị hiện trường -->
+      <div class="survey-card" style="margin-bottom: 14px;">
+        <div class="survey-card-header">
+          <span class="survey-card-title">🧰 Thiết bị trích xuất</span>
+          <button class="btn-edit-inline" id="btn-add-equip">+ Thêm</button>
+        </div>
+        <div id="equipment-list-box" style="display: flex; flex-direction: column; gap: 8px;">
+          <!-- Render danh sách thiết bị -->
+        </div>
+      </div>
+
+      <!-- Section: Hiện trạng khiếm khuyết & Ghi chú -->
+      <div class="survey-card" style="margin-bottom: 14px;">
+        <div class="survey-card-header">
+          <span class="survey-card-title">⚠️ Hiện trạng & Ghi chú</span>
+          <button class="btn-edit-inline" id="btn-edit-note">✏️ Sửa ghi chú</button>
+        </div>
+        <p style="font-size: 0.9rem; color: #fde047; margin-bottom: 8px;" id="val-notes">Chưa có ghi chú.</p>
+        <div id="defects-list-box" style="display: flex; flex-direction: column; gap: 6px;">
+          <!-- Render khiếm khuyết -->
+        </div>
+      </div>
+
+      <!-- Section: Thư viện ảnh trích xuất -->
+      <div class="survey-card" style="margin-bottom: 24px;">
+        <div class="survey-card-header">
+          <span class="survey-card-title">🖼 Ảnh khảo sát đã chọn</span>
+          <span class="text-muted" style="font-size: 0.8rem;" id="gallery-count-label">0 ảnh</span>
+        </div>
+        <div class="photo-gallery-grid" id="photo-gallery-container">
+          <!-- Render thumbnails -->
+        </div>
+      </div>
+
+      <!-- Sticky Action Dock -->
+      <div class="result-action-dock">
+        <button class="btn-dock btn-dock-save" id="btn-save-survey">💾 Lưu lại</button>
+        <button class="btn-dock btn-dock-export-json" id="btn-export-json">📤 JSON</button>
+        <button class="btn-dock btn-dock-export-csv" id="btn-export-csv">📊 CSV</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- MODAL: EDIT FIELD BOTTOM SHEET -->
+  <div class="modal-backdrop" id="modal-edit-field">
+    <div class="modal-sheet">
+      <h3 class="modal-title" id="modal-edit-title">Chỉnh sửa thông số</h3>
+      <input type="text" class="modal-input" id="modal-edit-input" placeholder="Nhập giá trị...">
+      <div class="modal-actions">
+        <button class="btn-modal btn-modal-cancel" id="btn-modal-cancel">Hủy</button>
+        <button class="btn-modal btn-modal-save" id="btn-modal-save">Xác nhận</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: FULLSCREEN PHOTO VIEWER -->
+  <div id="photo-viewer-modal">
+    <div class="photo-viewer-header">
+      <span id="photo-viewer-title">Ảnh khảo sát</span>
+      <button class="btn-icon" id="btn-close-photo-viewer">✕</button>
+    </div>
+    <div class="photo-viewer-content">
+      <img id="photo-viewer-img" src="" alt="Khảo sát">
+    </div>
+  </div>
+
+  <!-- MODAL: SETTINGS -->
+  <div class="modal-backdrop" id="modal-settings">
+    <div class="modal-sheet">
+      <h3 class="modal-title">⚙️ Cài đặt khảo sát KHKT</h3>
+      <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 12px;">
+        Ứng dụng mặc định hoạt động 100% ngoại tuyến (Offline) bảo mật và an toàn. Nếu anh Nam có endpoint/API key AI riêng, có thể cấu hình tại đây (chỉ lưu trên máy cá nhân của anh).
+      </p>
+      <label style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 4px;">API Endpoint (Tùy chọn):</label>
+      <input type="text" class="modal-input" id="settings-ai-endpoint" placeholder="https://..." style="margin-bottom: 10px;">
+      <label style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 4px;">API Key (Tùy chọn):</label>
+      <input type="password" class="modal-input" id="settings-ai-key" placeholder="Khóa API riêng...">
+      <div class="modal-actions">
+        <button class="btn-modal btn-modal-cancel" id="btn-settings-close">Đóng</button>
+        <button class="btn-modal btn-modal-save" id="btn-settings-save">Lưu cấu hình</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    Khảo sát hiện trường KHKT • Điện lực Nam Trực
+  </footer>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

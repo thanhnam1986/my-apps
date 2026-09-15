@@ -26,6 +26,7 @@
     .app-link { min-height: 112px; padding: 14px 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; border: 1px solid #ececf5; border-radius: 18px; color: #292b42; background: #f8f8fe; text-align: center; text-decoration: none; font-size: .9rem; font-weight: 650; transition: transform .16s ease, background-color .16s ease; touch-action: manipulation; }
     .app-link:active { transform: scale(.98); background: #f0f0fa; }
     .app-link span { font-size: 1.9rem; }
+    .app-link.featured { grid-column: 1 / -1; background: #eef2ff; border-color: #c7d2fe; color: #1e1b4b; font-weight: 750; }
     footer { margin-top: auto; padding: 28px 0 4px; text-align: center; color: rgba(255,255,255,.86); font-size: .85rem; }
     @media (max-width: 370px) { .apps-grid { grid-template-columns: 1fr; } }
     @media (prefers-reduced-motion: reduce) { .app-link { transition: none; } }
@@ -38,6 +39,7 @@
       <section class="work-panel" id="work-panel" aria-label="Ứng dụng công việc">
         <h2>Ứng dụng công việc</h2>
         <div class="apps-grid">
+          <a class="app-link featured" href="apps/khao-sat-hien-truong/"><span aria-hidden="true">📹</span>Khảo sát hiện trường</a>
           <a class="app-link" href="gps/"><span aria-hidden="true">📍</span>Đo GPS</a>
           <a class="app-link" href="apps/tinh-day-chi-mba/"><span aria-hidden="true">⚡</span>Tính dây chì MBA</a>
           <a class="app-link" href="apps/tra-cuu-trong-luong-day/"><span aria-hidden="true">📦</span>Tra cứu trọng lượng dây</a>
