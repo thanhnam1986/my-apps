@@ -17,36 +17,24 @@
     * { box-sizing: border-box; }
     body { min-height: 100svh; margin: 0; padding: max(24px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left)); background: linear-gradient(145deg, #667eea 0%, #764ba2 100%); }
     .page { width: min(100%, 680px); min-height: calc(100svh - 48px); margin: auto; display: flex; flex-direction: column; }
-    header { padding: 14px 0 30px; text-align: center; color: #fff; }
-    h1 { margin: 0 0 8px; font-size: clamp(1.8rem, 8vw, 2.5rem); letter-spacing: -0.035em; text-shadow: 0 3px 14px rgba(31, 28, 80, 0.22); }
-    header p { margin: 0; opacity: 0.9; }
-    .choice-grid { display: grid; grid-template-columns: 1fr; gap: 16px; width: 100%; }
+    header { padding: 14px 0 24px; text-align: center; color: #fff; }
+    h1 { margin: 0; font-size: clamp(1.8rem, 8vw, 2.5rem); letter-spacing: -0.035em; text-shadow: 0 3px 14px rgba(31, 28, 80, 0.22); }
     button, a { font: inherit; }
-    .choice { min-height: 170px; padding: 22px 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; border: 0; border-radius: 24px; background: rgba(255,255,255,.97); color: #282a44; cursor: pointer; box-shadow: 0 14px 36px rgba(31,28,80,.22); transition: transform .16s ease; touch-action: manipulation; width: 100%; }
-    .choice:active { transform: scale(.98); }
-    .choice-icon { font-size: 3.5rem; line-height: 1; }
-    .choice-title { font-size: 1.15rem; font-weight: 750; }
-    .choice-note { color: #77798c; font-size: .82rem; }
-    .work-panel { display: none; margin-top: 18px; padding: 20px; border-radius: 24px; background: rgba(255,255,255,.96); box-shadow: 0 14px 36px rgba(31,28,80,.2); }
-    .work-panel.open { display: block; }
+    .work-panel { display: block; padding: 22px 20px; border-radius: 24px; background: rgba(255,255,255,.96); box-shadow: 0 14px 36px rgba(31,28,80,.2); }
     .work-panel h2 { margin: 0 0 16px; font-size: 1.2rem; }
     .apps-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-    .app-link { min-height: 112px; padding: 14px 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; border: 1px solid #ececf5; border-radius: 18px; color: #292b42; background: #f8f8fe; text-align: center; text-decoration: none; font-size: .9rem; font-weight: 650; }
+    .app-link { min-height: 112px; padding: 14px 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; border: 1px solid #ececf5; border-radius: 18px; color: #292b42; background: #f8f8fe; text-align: center; text-decoration: none; font-size: .9rem; font-weight: 650; transition: transform .16s ease, background-color .16s ease; touch-action: manipulation; }
+    .app-link:active { transform: scale(.98); background: #f0f0fa; }
     .app-link span { font-size: 1.9rem; }
     footer { margin-top: auto; padding: 28px 0 4px; text-align: center; color: rgba(255,255,255,.86); font-size: .85rem; }
-    @media (max-width: 370px) { .choice { min-height: 155px; padding-inline: 8px; } .choice-icon { font-size: 3rem; } .choice-title { font-size: 1rem; } .apps-grid { grid-template-columns: 1fr; } }
-    @media (prefers-reduced-motion: reduce) { .choice { transition: none; } }
+    @media (max-width: 370px) { .apps-grid { grid-template-columns: 1fr; } }
+    @media (prefers-reduced-motion: reduce) { .app-link { transition: none; } }
   </style>
 </head>
 <body>
   <div class="page">
-    <header><h1>📱 My Apps</h1><p>Anh muốn mở mục nào?</p></header>
+    <header><h1>📱 My Apps</h1></header>
     <main>
-      <div class="choice-grid">
-        <button class="choice" id="work-button" type="button" aria-expanded="false" aria-controls="work-panel">
-          <span class="choice-icon" aria-hidden="true">🧰</span><span class="choice-title">Công việc</span><span class="choice-note">4 tiện ích</span>
-        </button>
-      </div>
       <section class="work-panel" id="work-panel" aria-label="Ứng dụng công việc">
         <h2>Ứng dụng công việc</h2>
         <div class="apps-grid">
@@ -62,14 +50,6 @@
   </div>
 
   <script>
-    const workButton = document.getElementById("work-button");
-    const workPanel = document.getElementById("work-panel");
-
-    workButton.addEventListener("click", () => {
-      const isOpen = workPanel.classList.toggle("open");
-      workButton.setAttribute("aria-expanded", String(isOpen));
-      if (isOpen) workPanel.scrollIntoView({ behavior: "smooth", block: "nearest" });
-    });
     if ("serviceWorker" in navigator) navigator.serviceWorker.getRegistrations().then(items => Promise.all(items.map(item => item.unregister()))).catch(() => {});
     if ("caches" in window) caches.keys().then(keys => Promise.all(keys.map(key => caches.delete(key)))).catch(() => {});
   </script>
